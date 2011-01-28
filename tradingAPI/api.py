@@ -98,10 +98,12 @@ class API(object):
                 if not [x for x in self.stocks if x.name == name]:
                     self.stocks.append(Stock(name))
                 stock = [x for x in self.stocks if x.name == name][0]
-                buy_price = product.select("div.tradebox-price-buy")[0].text
+                buy_price = product.select("div.tradebox-price-sell")[0].text
+                # >>>>> DEPRECATED
                 dt = datetime.now()
                 stock_datetime = '-'.join([str(dt.year), str(dt.month), str(dt.day)]) + ' ' +\
                                  ':'.join([str(dt.hour), str(dt.minute), str(dt.second)])
+                # <<<<<
                 stock.addVar([stock_datetime, buy_price])
 
     def addPrefs(self, prefs):
