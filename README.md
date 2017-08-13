@@ -30,6 +30,8 @@ Built with *splinter* for a better way of browser automation.
 
 The dependencies for dev instances are:
 - splinter _v.0.7.6_
+- geckodriver _(for Firefox)_
+- chromedrive _(for Chrome)_
 
 ### Setting up Dev
 
@@ -48,6 +50,10 @@ And state what happens step-by-step. If there is any virtual environment, local 
 ### Building
 
 Personally I use *nuitka* to make exe.
+
+### To-do
+
+[ ] add real account login
 
 ## Versioning
 
