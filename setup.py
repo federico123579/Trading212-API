@@ -5,13 +5,18 @@ from  lib.data import __VERSION__
 setup(
     name="trading212api",
     version=__VERSION__,
-    packages=find_packages('lib'),
-    package_dir={'': 'lib'},
+    packages=['lib'],
+    install_requires=[
+        'splinter',
+        'bs4'
+    ],
+    zip_safe=False,
     author="Federico Lolli",
     author_email="federico123579@gmail.com",
     description="Package to interact with the broker service Trading212",
     license="MIT",
     keywords="trading api",
+    url="https://github.com/federico123579/Trading212-API",
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
