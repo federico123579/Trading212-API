@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 setup(
     name="trading212api",
-    version="0.1a0-2",
-    packages=find_packages('tradingAPI'),
+    version="0.1a0-3",
+    packages=['tradingAPI'],
     install_requires=[
         'splinter',
         'bs4'
