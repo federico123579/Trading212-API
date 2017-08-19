@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from splinter import Browser
 from time import sleep
 
-from lib.data import path
+from .data import path
 
 
 class API(object):
