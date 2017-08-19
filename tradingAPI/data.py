@@ -1,5 +1,3 @@
-__VERSION__="0.1a0"
-
 path = {
     'login-btn': "#login-button",
     'log': "input.btn-head",
