@@ -3,15 +3,17 @@
 # Trading212-API
 > API for Trading212 broker service
 
+[![Github All Releases](https://img.shields.io/github/downloads/federico123579/Trading212-API/total.svg)](https://github.com/federico123579/Trading212-API/releases)[![PyPI](https://img.shields.io/pypi/dm/trading212api.svg)](https://pypi.python.org/pypi?name=trading212api)[![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi?name=trading212api)
+
 A python user-interface for Trading 212 using browser automation.
 
 ## Installing / Getting started
 
-To install the API, just download the last stable release and run *api.py* after installing requirements.
+To install the API, just install it with pip.
 
 ```shell
-pip3.6 install requirements.txt
-python3.6 apy.py
+pip install trading212api
+python trading212api
 ```
 
 ## Developing
@@ -24,7 +26,7 @@ python3.6 apy.py
 
 - splinter _v.0.7.6_
 
-Built with *splinter* for a better way of browser automation.
+Built with *splinter* for a better browser automation.
 
 ### Prerequisites
 
@@ -42,14 +44,9 @@ the project further:
 git clone https://github.com/your/your-project.git
 cd your-project/
 python3.6 -m venv env
-pip3.6 install requirements.txt
+. env/bin//activate
+pip install splinter bs4
 ```
-
-And state what happens step-by-step. If there is any virtual environment, local server or database feeder needed, explain here.
-
-### Building
-
-Personally I use *nuitka* to make exe.
 
 ### To-do
 
@@ -73,14 +70,6 @@ for more information see [Semantic Versioning](http://semver.org/)
 As soon the program is launched it requires some user data:
 - username
 - password
-
-## Tests
-
-To test API run test.py
-
-```shell
-python3.6 test.py
-```
 
 ## Api Reference
 
