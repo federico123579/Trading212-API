@@ -4,8 +4,9 @@ import re
 from bs4 import BeautifulSoup
 from splinter import Browser
 from time import sleep
+from datetime import datetime
 
-from .data import path
+from .data import *
 
 
 class API(object):
@@ -13,6 +14,7 @@ class API(object):
     def __init__(self, brow="firefox"):
         self.browser = Browser(brow)
         self.movements = []
+        self.stocks = []
 
     def _css(self, css_path):
         '''css find function abbreviation'''
@@ -63,12 +65,14 @@ class API(object):
         sleep(1)
 
     def closeMov(self, mov):
+        '''close a position'''
         self._css("#" + mov.id + " div.close-icon").click()
         self.browser.find_by_text("OK").click()
         sleep(1.5)
         return 1
 
     def checkPos(self):
+        '''check all current positions'''
         soup = BeautifulSoup(self._css("tbody.dataTable-show-currentprice-arrows").html, "html.parser")
         movs = []
         for x in soup.find_all("tr"):
@@ -85,6 +89,23 @@ class API(object):
             movs.append(mov)    
         self.movements = movs
 
+    def checkStocks(self, stocks):
+        '''check specified stocks (list)'''
+        soup = BeautifulSoup(self._css("div.scrollable-area-content").html, "html.parser")
+        for product in soup.select("div.tradebox"):
+            name = symbols.get(product['id'].strip("tradebox_"))
+            print(name)
+            if name in stocks:  # to tidy up
+                if not [x for x in self.stocks if x.name == name]:
+                    self.stocks.append(Stock(name))
+                stock = [x for x in self.stocks if x.name == name][0]
+                buy_price = product.select("div.tradebox-price-buy")[0].text
+                dt = datetime.now()
+                stock_datetime = '-'.join([str(dt.year), str(dt.month), str(dt.day)]) + ' ' +\
+                                 ':'.join([str(dt.hour), str(dt.minute), str(dt.second)])
+                stock.addVar([stock_datetime, buy_price])
+        
+
 
 class Movement(object):
     def __init__(self, prod_id, product, quantity, mode, price, earn):
@@ -94,3 +115,12 @@ class Movement(object):
         self.mode = mode
         self.price = price
         self.earn = earn
+
+class Stock(object):
+    def __init__(self, name):
+        self.name = name
+        self.vars = []
+
+    def addVar(self, var):
+        '''add a variation (list)'''
+        self.vars.append(var)
