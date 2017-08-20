@@ -16,3 +16,15 @@ path = {
     'confirm-btn': "div.orderdialog-confirm-button",
     'data-table': "tbody.table-body.dataTable-show-currentprice-arrows",
 }
+
+symbols = {
+    'BTCUSD': "bitcoin",
+    'ETHUSD': "ethereum",
+    'EURJPG': "eur/jpg",
+    'EURUSD': "eur/usd",
+    'XAUUSD': "gold",
+    '#QMSEP17': "oil",
+    '$GERMAN30': "german30",
+    'BMW': "bmw",
+    'ENEL': "enel",
+}
