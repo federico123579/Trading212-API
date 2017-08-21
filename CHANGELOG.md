@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [0.1a1] - 2017-08-20
 ### Added
-- New function **checkPos**.
+- New function **checkStocks**.
 
 ## 0.1a0 - 2017-08-19
 Initial version.
