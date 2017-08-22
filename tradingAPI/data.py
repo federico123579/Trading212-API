@@ -15,6 +15,12 @@ path = {
     'limit-loss-value': "input#uniqName_1_13",
     'confirm-btn': "div.orderdialog-confirm-button",
     'data-table': "tbody.table-body.dataTable-show-currentprice-arrows",
+    'search-btn': "div.tradepanel-control-bar span",
+    'search-pref': "input.search-input",
+    'all-tools': "div.search-tab",
+    'add-btn': "div.search-results-column div.svg-icon-holder",
+    'plus-icon': "svg.search-plus-icon",
+    'close-prefs': "div.back-button",
 }
 
 symbols = {
