@@ -94,7 +94,6 @@ class API(object):
         soup = BeautifulSoup(self._css("div.scrollable-area-content").html, "html.parser")
         for product in soup.select("div.tradebox"):
             name = symbols.get(product['id'].strip("tradebox_"))
-            print(name)
             if name in stocks:  # to tidy up
                 if not [x for x in self.stocks if x.name == name]:
                     self.stocks.append(Stock(name))
@@ -104,7 +103,26 @@ class API(object):
                 stock_datetime = '-'.join([str(dt.year), str(dt.month), str(dt.day)]) + ' ' +\
                                  ':'.join([str(dt.hour), str(dt.minute), str(dt.second)])
                 stock.addVar([stock_datetime, buy_price])
-        
+
+    def addPrefs(self, prefs):
+        '''add prefered stocks'''
+        for pref in prefs:
+            self._css(path['search-btn']).click()
+            self._css(path['all-tools']).click()
+            self._css(path['search-pref']).fill(pref)
+            if self._css(path['plus-icon']):
+                self._css(path['add-btn']).click()
+        self._css(path['close-prefs']).click()
+
+    def clearPrefs(self):
+        '''clear all stock preferencies'''
+        self._css(path['search-btn']).click()
+        self._css(path['all-tools']).click()
+        for res in self._css("div.search-results-list-item"):
+            if not res.find_by_css(path['plus-icon']):
+                res.find_by_css(path['add-btn']).click()
+        # fix errors
+        self._css(path['close-prefs']).click()
 
 
 class Movement(object):

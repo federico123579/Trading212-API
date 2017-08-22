@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="trading212api",
-    version="0.1a0-3",
+    version="0.1a2",
     packages=['tradingAPI'],
     install_requires=[
         'splinter',
