@@ -41,8 +41,8 @@ Here's a brief intro about what a developer must do in order to start developing
 the project further:
 
 ```shell
-git clone https://github.com/your/your-project.git
-cd your-project/
+git clone https://github.com/federico123579/Trading212-API.git
+cd Trading212-API/
 python3.6 -m venv env
 . env/bin//activate
 pip install splinter bs4
