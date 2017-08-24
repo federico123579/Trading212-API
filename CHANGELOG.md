@@ -6,8 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1b1] - 2017-08-24
+### Fixed
+- Fixed finally **checkStocks**.
+
 ## [0.1a2] - 2017-08-23
-Fixed checkStocks.
+### Fixed
+- Fixed partially **checkStocks**.
 
 ### Added
 - New function **addPrefs**.
