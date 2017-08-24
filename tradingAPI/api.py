@@ -93,8 +93,8 @@ class API(object):
         '''check specified stocks (list)'''
         soup = BeautifulSoup(self._css("div.scrollable-area-content").html, "html.parser")
         for product in soup.select("div.tradebox"):
-            name = symbols.get(product['id'].strip("tradebox_"))
-            if name in stocks:  # to tidy up
+            name = product.select("span.instrument-name")[0].text.lower()
+            if [x for x in stocks if name.find(x) != -1]:  # to tidy up
                 if not [x for x in self.stocks if x.name == name]:
                     self.stocks.append(Stock(name))
                 stock = [x for x in self.stocks if x.name == name][0]
