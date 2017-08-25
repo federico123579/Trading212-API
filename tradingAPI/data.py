@@ -22,15 +22,3 @@ path = {
     'plus-icon': "svg.search-plus-icon",
     'close-prefs': "div.back-button",
 }
-
-symbols = {
-    'BTCUSD': "bitcoin",
-    'ETHUSD': "ethereum",
-    'EURJPG': "eur/jpg",
-    'EURUSD': "eur/usd",
-    'XAUUSD': "gold",
-    '#QMSEP17': "oil",
-    '$GERMAN30': "german30",
-    'BMW': "bmw",
-    'ENEL': "enel",
-}

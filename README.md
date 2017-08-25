@@ -3,7 +3,7 @@
 # Trading212-API
 > API for Trading212 broker service
 
-[![Github All Releases](https://img.shields.io/github/downloads/federico123579/Trading212-API/total.svg)](https://github.com/federico123579/Trading212-API/releases) [![PyPI](https://img.shields.io/pypi/dm/trading212api.svg)](https://pypi.python.org/pypi?name=trading212api) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi?name=trading212api)
+[![Github All Releases](https://img.shields.io/github/downloads/federico123579/Trading212-API/total.svg)](https://github.com/federico123579/Trading212-API/releases) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api)
 
 A python user-interface for Trading 212 using browser automation.
 
@@ -41,8 +41,8 @@ Here's a brief intro about what a developer must do in order to start developing
 the project further:
 
 ```shell
-git clone https://github.com/your/your-project.git
-cd your-project/
+git clone https://github.com/federico123579/Trading212-API.git
+cd Trading212-API/
 python3.6 -m venv env
 . env/bin//activate
 pip install splinter bs4
