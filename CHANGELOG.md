@@ -26,8 +26,5 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 Initial version.
 
 [Unreleased]: https://github.com/federico123579/Trading212-API/compare/v0.1a0...HEAD
-<<<<<<< HEAD
 [0.1a1]: https://github.com/federico123579/Trading212-API/compare/v0.1a0...v0.1a1
-=======
-[0.1a1]: https://github.com/federico123579/Trading212-API/compare/v0.1a0...v0.1a1
->>>>>>> factory
+
