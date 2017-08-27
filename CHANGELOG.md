@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Changed
+- [b17e6df]: Launch browser function on own _"self.launch()"_.
 
 ## [0.1b2] - 2017-08-27
 ### Added
@@ -41,5 +43,6 @@ Initial version.
 [0.1a2]: https://github.com/federico123579/Trading212-API/compare/v0.1a1...v0.1a2
 [0.1a1]: https://github.com/federico123579/Trading212-API/compare/v0.1a0...v0.1a1
 
+[b17e6df]: https://github.com/federico123579/Trading212-API/commit/b17e6df
 [cbf449a]: https://github.com/federico123579/Trading212-API/commit/cbf449a
 [64f78e4]: https://github.com/federico123579/Trading212-API/commit/64f78e4
