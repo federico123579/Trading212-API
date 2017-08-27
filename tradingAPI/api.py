@@ -119,6 +119,9 @@ class API(object):
             if self._css(path['plus-icon']):
                 self._css(path['add-btn']).click()
         self._css(path['close-prefs']).click()
+        self._css("span.prefs-icon-node")[0].click()
+        self._css("div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
+        self._css("span.prefs-icon-node")[0].click()
 
     def clearPrefs(self):
         '''clear all stock preferencies'''
