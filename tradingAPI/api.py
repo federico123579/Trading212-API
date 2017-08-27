@@ -99,12 +99,14 @@ class API(object):
                     self.stocks.append(Stock(name))
                 stock = [x for x in self.stocks if x.name == name][0]
                 buy_price = product.select("div.tradebox-price-sell")[0].text
+                raw_sent = product.select("span.tradebox-buyers-container.number-box")[0].text
+                sent = (int(raw_sent.strip('%')) / 100)
                 # >>>>> DEPRECATED
                 dt = datetime.now()
                 stock_datetime = '-'.join([str(dt.year), str(dt.month), str(dt.day)]) + ' ' +\
                                  ':'.join([str(dt.hour), str(dt.minute), str(dt.second)])
                 # <<<<<
-                stock.addVar([stock_datetime, buy_price])
+                stock.addVar([stock_datetime, buy_price, sent])
 
     def addPrefs(self, prefs):
         '''add prefered stocks'''
