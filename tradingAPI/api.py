@@ -12,7 +12,6 @@ from .data import *
 class API(object):
     '''Interface object'''
     def __init__(self, brow="firefox"):
-        self.browser = Browser(brow)
         self.movements = []
         self.stocks = []
 
@@ -31,6 +30,9 @@ class API(object):
     def _num(self, string):
         '''convert a string to float (float gave me problems)'''
         return re.findall(r"[-+]?\d*\.\d+|\d+", string)[0]
+
+    def launch(self):
+        self.browser = Browser(brow)
 
     def login(self, username, password, mode="demo"):
         '''Login function'''
