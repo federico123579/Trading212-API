@@ -11,8 +11,7 @@ from .data import *
 
 class API(object):
     '''Interface object'''
-    def __init__(self, brow="firefox"):
-        self.browser = Browser(brow)
+    def __init__(self):
         self.movements = []
         self.stocks = []
 
@@ -31,6 +30,9 @@ class API(object):
     def _num(self, string):
         '''convert a string to float (float gave me problems)'''
         return re.findall(r"[-+]?\d*\.\d+|\d+", string)[0]
+
+    def launch(self, brow="firefox"):
+        self.browser = Browser(brow)
 
     def login(self, username, password, mode="demo"):
         '''Login function'''
@@ -117,6 +119,9 @@ class API(object):
             if self._css(path['plus-icon']):
                 self._css(path['add-btn']).click()
         self._css(path['close-prefs']).click()
+        self._css("span.prefs-icon-node")[0].click()
+        self._css("div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
+        self._css("span.prefs-icon-node")[0].click()
 
     def clearPrefs(self):
         '''clear all stock preferencies'''

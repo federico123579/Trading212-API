@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1b3] - 2017-08-28
+### Added
+- [07f19ad]: Added sentiment to **addPrefs**. 
+
+### Changed
+- [b17e6df]: Launch browser function on its own _"self.launch()"_.
+
 ## [0.1b2] - 2017-08-27
 ### Added
 - [cbf449a]: Added sentiment to **checkStocks**.
@@ -35,11 +42,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## 0.1a0 - 2017-08-19
 Initial version.
 
-[Unreleased]: https://github.com/federico123579/Trading212-API/compare/v0.1b2...HEAD
+[Unreleased]: https://github.com/federico123579/Trading212-API/compare/v0.1b3...HEAD
+[0.1b3]: https://github.com/federico123579/Trading212-API/compare/v0.1b2...v0.1b3
 [0.1b2]: https://github.com/federico123579/Trading212-API/compare/v0.1b1...v0.1b2
 [0.1b1]: https://github.com/federico123579/Trading212-API/compare/v0.1a2...v0.1b1
 [0.1a2]: https://github.com/federico123579/Trading212-API/compare/v0.1a1...v0.1a2
 [0.1a1]: https://github.com/federico123579/Trading212-API/compare/v0.1a0...v0.1a1
 
+[07f19ad]: https://github.com/federico123579/Trading212-API/commit/07f19ad
+[b17e6df]: https://github.com/federico123579/Trading212-API/commit/b17e6df
 [cbf449a]: https://github.com/federico123579/Trading212-API/commit/cbf449a
 [64f78e4]: https://github.com/federico123579/Trading212-API/commit/64f78e4
