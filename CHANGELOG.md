@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.1b3] - 2017-08-28
 ### Added
 - [07f19ad]: Added sentiment to **addPrefs**. 
 
@@ -40,7 +42,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## 0.1a0 - 2017-08-19
 Initial version.
 
-[Unreleased]: https://github.com/federico123579/Trading212-API/compare/v0.1b2...HEAD
+[Unreleased]: https://github.com/federico123579/Trading212-API/compare/v0.1b3...HEAD
+[0.1b3]: https://github.com/federico123579/Trading212-API/compare/v0.1b2...v0.1b3
 [0.1b2]: https://github.com/federico123579/Trading212-API/compare/v0.1b1...v0.1b2
 [0.1b1]: https://github.com/federico123579/Trading212-API/compare/v0.1a2...v0.1b1
 [0.1a2]: https://github.com/federico123579/Trading212-API/compare/v0.1a1...v0.1a2
