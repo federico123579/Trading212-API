@@ -102,7 +102,10 @@ class API(object):
                 stock = [x for x in self.stocks if x.name == name][0]
                 buy_price = product.select("div.tradebox-price-sell")[0].text
                 raw_sent = product.select("span.tradebox-buyers-container.number-box")[0].text
-                sent = (int(raw_sent.strip('%')) / 100)
+                try:
+                    sent = (int(raw_sent.strip('%')) / 100)
+                except:
+                    sent = None
                 # >>>>> DEPRECATED
                 dt = datetime.now()
                 stock_datetime = '-'.join([str(dt.year), str(dt.month), str(dt.day)]) + ' ' +\
@@ -113,26 +116,28 @@ class API(object):
     def addPrefs(self, prefs):
         '''add prefered stocks'''
         for pref in prefs:
-            self._css(path['search-btn']).click()
-            self._css(path['all-tools']).click()
-            self._css(path['search-pref']).fill(pref)
+            self._css(path['search-btn'])[0].click()
+            self._css(path['all-tools'])[0].click()
+            self._css(path['search-pref'])[0].fill(pref)
             if self._css(path['plus-icon']):
-                self._css(path['add-btn']).click()
-        self._css(path['close-prefs']).click()
+                self._css(path['add-btn'])[0].click()
+        self._css(path['close-prefs'])[0].click()
         self._css("span.prefs-icon-node")[0].click()
         self._css("div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
         self._css("span.prefs-icon-node")[0].click()
 
     def clearPrefs(self):
         '''clear all stock preferencies'''
-        self._css(path['search-btn']).click()
-        self._css(path['all-tools']).click()
+        self._css(path['search-btn'])[0].click()
+        self._css(path['all-tools'])[0].click()
         for res in self._css("div.search-results-list-item"):
             if not res.find_by_css(path['plus-icon']):
-                res.find_by_css(path['add-btn']).click()
+                res.find_by_css(path['add-btn'])[0].click()
+        self._css('div.widget_message span.btn')[0].click()
         # fix errors
-        self._css(path['close-prefs']).click()
-
+        self._css(path['close-prefs'])[0].click()
+        while not self._elCss(path['search-btn']):
+            pass
 
 class Movement(object):
     def __init__(self, prod_id, product, quantity, mode, price, earn):
