@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [0.1b3] - 2017-08-28
 ### Added
+- [4d8ae51]: Added virtual browser.
 - [07f19ad]: Added sentiment to **addPrefs**. 
 
 ### Changed
@@ -51,6 +52,7 @@ Initial version.
 [0.1a2]: https://github.com/federico123579/Trading212-API/compare/v0.1a1...v0.1a2
 [0.1a1]: https://github.com/federico123579/Trading212-API/compare/v0.1a0...v0.1a1
 
+[4d8ae51]: https://github.com/federico123579/Trading212-API/commit/4d8ae51
 [ce71903]: https://github.com/federico123579/Trading212-API/commit/ce71903
 [07f19ad]: https://github.com/federico123579/Trading212-API/commit/07f19ad
 [b17e6df]: https://github.com/federico123579/Trading212-API/commit/b17e6df

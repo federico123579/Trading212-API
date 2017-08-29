@@ -6,6 +6,7 @@ setup(
     packages=['tradingAPI'],
     install_requires=[
         'splinter',
+        'xvfbwrapper',
         'bs4'
     ],
     zip_safe=False,
