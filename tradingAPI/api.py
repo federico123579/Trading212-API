@@ -1,6 +1,7 @@
 #/usr/bin/env python3.6
 
 import re
+from xvfbwrapper import Xvfb
 from bs4 import BeautifulSoup
 from splinter import Browser
 from time import sleep
@@ -14,6 +15,7 @@ class API(object):
     def __init__(self):
         self.movements = []
         self.stocks = []
+        self.vbro = Xvfb()
 
     def _css(self, css_path):
         '''css find function abbreviation'''
@@ -32,6 +34,7 @@ class API(object):
         return re.findall(r"[-+]?\d*\.\d+|\d+", string)[0]
 
     def launch(self, brow="firefox"):
+        self.vbro.start()
         self.browser = Browser(brow)
 
     def login(self, username, password, mode="demo"):
@@ -49,6 +52,7 @@ class API(object):
     def logout(self):
         '''logout func (to quit browser)'''
         self.browser.quit()
+        self.vbro.stop()
 
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None):
         '''Add movement function'''
