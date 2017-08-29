@@ -6,7 +6,7 @@ setup(
     packages=['tradingAPI'],
     install_requires=[
         'splinter',
-        'xvfbwrapper',
+        'pyvirtualdisplay',
         'bs4'
     ],
     zip_safe=False,
