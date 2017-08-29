@@ -1,7 +1,7 @@
 #/usr/bin/env python3.6
 
 import re
-from xvfbwrapper import Xvfb
+from pyvirtualdisplay import Display
 from bs4 import BeautifulSoup
 from splinter import Browser
 from time import sleep
@@ -15,7 +15,7 @@ class API(object):
     def __init__(self):
         self.movements = []
         self.stocks = []
-        self.vbro = Xvfb()
+        self.vbro = Display()
 
     def _css(self, css_path):
         '''css find function abbreviation'''
