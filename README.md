@@ -3,7 +3,7 @@
 # Trading212-API
 > API for Trading212 broker service
 
-[![Github All Releases](https://img.shields.io/github/downloads/federico123579/Trading212-API/total.svg)](https://github.com/federico123579/Trading212-API/releases) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api)
+[![Github All Releases](https://img.shields.io/github/downloads/federico123579/Trading212-API/total.svg)](https://github.com/federico123579/Trading212-API/releases) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api) [![ghit.me](https://ghit.me/badge.svg?repo=federico123579/Trading212-API)](https://ghit.me/repo/federico123579/Trading212-API)
 
 A python user-interface for Trading 212 using browser automation.
 
