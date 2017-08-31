@@ -6,7 +6,6 @@ from pyvirtualdisplay import Display
 from bs4 import BeautifulSoup
 from splinter import Browser
 from time import sleep
-from datetime import datetime
 from .exceptions import *
 from .logger import  logger
 from .color import *
@@ -137,18 +136,13 @@ class API(object):
                 if not [x for x in self.stocks if x.name == name]:
                     self.stocks.append(Stock(name))
                 stock = [x for x in self.stocks if x.name == name][0]
-                buy_price = product.select("div.tradebox-price-sell")[0].text
+                sell_price = product.select("div.tradebox-price-sell")[0].text
                 raw_sent = product.select("span.tradebox-buyers-container.number-box")[0].text
                 try:
                     sent = (int(raw_sent.strip('%')) / 100)
                 except:
                     sent = None
-                # >>>>> DEPRECATED
-                dt = datetime.now()
-                stock_datetime = '-'.join([str(dt.year), str(dt.month), str(dt.day)]) + ' ' +\
-                                 ':'.join([str(dt.hour), str(dt.minute), str(dt.second)])
-                # <<<<<
-                stock.addVar([stock_datetime, buy_price, sent])
+                stock.addVar([sell_price, sent])
                 count += 1
         self.logger.debug("added {count} stocks".format(count=bold(count)))
 
