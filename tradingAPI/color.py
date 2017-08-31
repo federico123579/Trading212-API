@@ -12,24 +12,25 @@ UNDERLINE = '\033[04m'
 
 
 # COLOR FUNCTIONS
-def bold(str):
-    return BOLD + str + WHITE
-def underline(str):
-    return UNDERLINE + str + WHITE
-def cyan(str):
-    return CYAN + str + WHITE
-def purple(str):
-    return PURPLE + str + WHITE
-def blue(str):
-    return BLUE + str + WHITE
-def green(str):
-    return GREEN + str + WHITE
-def red(str):
-    return RED + str + WHITE
-def yellow(str):
-    return YELLOW + str + WHITE
-def white(str):
-    return WHITE + str + WHITE
+def bold(string):
+    return BOLD + str(string) + WHITE
+def underline(string):
+    return UNDERLINE + str(string) + WHITE
+def cyan(string):
+    return CYAN + str(string) + WHITE
+def purple(string):
+    return PURPLE + str(string) + WHITE
+def blue(string):
+    return BLUE + str(string) + WHITE
+def green(string):
+    return GREEN + str(string) + WHITE
+def red(string):
+    return RED + str(string) + WHITE
+def yellow(string):
+    return YELLOW + str(string) + WHITE
+def white(string):
+    return WHITE + str(string) + WHITE
+
 
 class printer(object):
     @staticmethod
