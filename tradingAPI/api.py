@@ -14,10 +14,10 @@ from .data import *
 
 class API(object):
     '''Interface object'''
-    def __init__(self):
+    def __init__(self, level):
         self.movements = []
         self.stocks = []
-        self.logger = logger()
+        self.logger = logger(level)
         self.vbro = Display()
 
     def _css(self, css_path):
