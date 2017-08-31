@@ -1,12 +1,15 @@
 #/usr/bin/env python3.6
 
 import re
+import selenium.common.exceptions
 from pyvirtualdisplay import Display
 from bs4 import BeautifulSoup
 from splinter import Browser
 from time import sleep
 from datetime import datetime
+from .exceptions import *
 from .logger import  logger
+from .color import *
 from .data import *
 
 
@@ -44,7 +47,10 @@ class API(object):
         '''Login function'''
         url = "https://trading212.com/it/login"
         self.logger.debug("visiting {url}".format(url=url))
-        self.browser.visit(url)
+        try:
+            self.browser.visit(url)
+        except selenium.common.exceptions.WebDriverException:
+            self.logger.critical("connection timed out")
         # self._css(path['login-btn']).click() obsolete
         self._name("login[username]").fill(username)
         self._name("login[password]").fill(password)
@@ -61,7 +67,10 @@ class API(object):
 
     def logout(self):
         '''logout func (to quit browser)'''
-        self.browser.quit()
+        try:
+            self.browser.quit()
+        except:
+            raise BrowserException("browser not started")
         self.vbro.stop()
         self.logger.debug("Logged out")
 
