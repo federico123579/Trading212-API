@@ -9,6 +9,8 @@ setup(
         'pyvirtualdisplay',
         'bs4'
     ],
+    include_package_data=True,
+    package_data={'': ['*.conf']},
     zip_safe=False,
     author="Federico Lolli",
     author_email="federico123579@gmail.com",

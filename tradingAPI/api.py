@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from splinter import Browser
 from time import sleep
 from datetime import datetime
-
+from .logger import  logger
 from .data import *
 
 
@@ -15,6 +15,7 @@ class API(object):
     def __init__(self):
         self.movements = []
         self.stocks = []
+        self.logger = logger()
         self.vbro = Display()
 
     def _css(self, css_path):
@@ -35,17 +36,26 @@ class API(object):
 
     def launch(self, brow="firefox"):
         self.vbro.start()
+        self.logger.debug("virtual display launched")
         self.browser = Browser(brow)
+        self.logger.debug("browser {brow} launched".format(brow=brow))
 
     def login(self, username, password, mode="demo"):
         '''Login function'''
-        self.browser.visit("https://trading212.com/it/login")
+        url = "https://trading212.com/it/login"
+        self.logger.debug("visiting {url}".format(url=url))
+        self.browser.visit(url)
         # self._css(path['login-btn']).click() obsolete
         self._name("login[username]").fill(username)
         self._name("login[password]").fill(password)
         self._css(path['log']).click()
+        timeout = 30
         while not self._elCss(path['logo']):
+            timeout -= 1
+            if timeout == 0:
+                self.logger.critical("login failed")
             sleep(1)
+        self.logger.debug("logged in")
         if mode == "demo" and self._elCss(path['alert-box']):
             self._css(path['alert-box']).click()
 
@@ -53,34 +63,45 @@ class API(object):
         '''logout func (to quit browser)'''
         self.browser.quit()
         self.vbro.stop()
+        self.logger.debug("Logged out")
 
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None):
         '''Add movement function'''
-        self._css(path['add-mov']).click()
-        self._css(path['search-box']).fill(product)
+        self._css(path['add-mov'])[0].click()
+        self._css(path['search-box'])[0].fill(product)
         if not self._elCss(path['first-res']):
+            self.logger.error("{product} not found".format(product=underline(product)))
+            self._css('span.orderdialog-close')[0].click()
             return 0
-        self._css(path['first-res']).click()
-        self._css(path[mode + '-btn']).click()
+        self._css(path['first-res'])[0].click()
+        self._css(path[mode + '-btn'])[0].click()
         if quantity != None:
-            self._css(path['quantity']).fill(str(quantity))
+            self._css(path['quantity'])[0].fill(str(quantity))
         if stop_limit != None:
-            self._css(path['limit-gain-' + stop_limit['gain'][0]]).fill(str(stop_limit['gain'][1]))
-            self._css(path['limit-loss-' + stop_limit['loss'][0]]).fill(str(stop_limit['loss'][1]))
-        self._css(path['confirm-btn']).click()
+            self._css(path['limit-gain-' + stop_limit['gain'][0]])[0].fill(str(stop_limit['gain'][1]))
+            self._css(path['limit-loss-' + stop_limit['loss'][0]])[0].fill(str(stop_limit['loss'][1]))
+        self._css(path['confirm-btn'])[0].click()
+        self.logger.info("Added movement of {quant} {product} with limit \
+            {limit}".format(quant=bold(quantity), product=bold(product), limit=bold(stop_limit)))
         sleep(1)
 
-    def closeMov(self, mov):
+    def closeMov(self, mov_id):
         '''close a position'''
-        self._css("#" + mov.id + " div.close-icon").click()
-        self.browser.find_by_text("OK").click()
+        self._css("#" + mov_id + " div.close-icon")[0].click()
+        self.browser.find_by_text("OK")[0].click()
         sleep(1.5)
-        return 1
+        if self._elCss("#" + mov_id + " div.close-icon"):
+            self.logger.error("failed to close mov {id}".format(id=mov_id))
+            return 0
+        else:
+            self.logger.info("closed mov {id}".format(id=bold(mov_id)))
+            return 1
 
     def checkPos(self):
         '''check all current positions'''
         soup = BeautifulSoup(self._css("tbody.dataTable-show-currentprice-arrows").html, "html.parser")
         movs = []
+        count = 0
         for x in soup.find_all("tr"):
             prod_id = x['id']
             product = x.select("td.name")[0].text
@@ -92,12 +113,15 @@ class API(object):
             price = self._num(x.select("td.averagePrice")[0].text)
             earn = self._num(x.select("td.ppl")[0].text)
             mov = Movement(prod_id, product, quant, mode, price, earn)
-            movs.append(mov)    
+            movs.append(mov)
+            count += 1
+        self.logger.debug("{count} positions updated".format(count=bold(count)))
         self.movements = movs
 
     def checkStocks(self, stocks):
         '''check specified stocks (list)'''
         soup = BeautifulSoup(self._css("div.scrollable-area-content").html, "html.parser")
+        count = 0
         for product in soup.select("div.tradebox"):
             name = product.select("span.instrument-name")[0].text.lower()
             if [x for x in stocks if name.find(x) != -1]:  # to tidy up
@@ -116,6 +140,8 @@ class API(object):
                                  ':'.join([str(dt.hour), str(dt.minute), str(dt.second)])
                 # <<<<<
                 stock.addVar([stock_datetime, buy_price, sent])
+                count += 1
+        self.logger.debug("added {count} stocks".format(count=bold(count)))
 
     def addPrefs(self, prefs):
         '''add prefered stocks'''
@@ -129,6 +155,7 @@ class API(object):
         self._css("span.prefs-icon-node")[0].click()
         self._css("div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
         self._css("span.prefs-icon-node")[0].click()
+        self.logger.debug("added {prefs} to preferencies".format(prefs=', '.join([bold(x) for x in prefs])))
 
     def clearPrefs(self):
         '''clear all stock preferencies'''
@@ -141,7 +168,8 @@ class API(object):
         # fix errors
         self._css(path['close-prefs'])[0].click()
         while not self._elCss(path['search-btn']):
-            pass
+            time.sleep(0.5)
+        self.logger.debug("cleared preferencies")
 
 class Movement(object):
     def __init__(self, prod_id, product, quantity, mode, price, earn):
