@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- [3dab378]: Added BrowserException
 - [4d9e3d6]: Added logger
+
+### Removed
+- [95ca894]: Removed datetime from records
 
 ### Fixed
 - [ce71903]: Fixed **addPrefs** and **clearPrefs** bugs.
@@ -55,6 +59,9 @@ Initial version.
 [0.1a2]: https://github.com/federico123579/Trading212-API/compare/v0.1a1...v0.1a2
 [0.1a1]: https://github.com/federico123579/Trading212-API/compare/v0.1a0...v0.1a1
 
+[95ca894]: https://github.com/federico123579/Trading212-API/commit/95ca894
+[3dab378]: https://github.com/federico123579/Trading212-API/commit/e25a600
+[4d9e3d6]: https://github.com/federico123579/Trading212-API/commit/4d9e3d6
 [abdde90]: https://github.com/federico123579/Trading212-API/commit/abdde90
 [ce71903]: https://github.com/federico123579/Trading212-API/commit/ce71903
 [07f19ad]: https://github.com/federico123579/Trading212-API/commit/07f19ad
