@@ -13,7 +13,7 @@ install:
 before_script:
   - git clone https://github.com/federico123579/Trading212-API.git
   - cd Trading212-API
-  - ls -l
+  - git checkout factory
 script:
   - py.test -v test.py
 after_success:
