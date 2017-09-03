@@ -15,8 +15,8 @@ before_script:
   - cd Trading212-API
   - python -m venv env
   - source env/bin/activate
-  - pip install nose
+  - pip install pytest
 script:
-  - python -m nosetests -v test.py
+  - python -m py.test -v test.py
 after_success:
   - coveralls
