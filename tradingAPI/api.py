@@ -166,6 +166,7 @@ class API(object):
                 self._css(path['add-btn'])[0].click()
         self._css(path['close-prefs'])[0].click()
         self._css("span.prefs-icon-node")[0].click()
+        sleep(0.5)
         self._css(
             "div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
         self._css("span.prefs-icon-node")[0].click()
