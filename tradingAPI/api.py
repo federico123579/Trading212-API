@@ -32,7 +32,7 @@ class API(object):
                 fails += 1
                 sleep(0.5)
         self.logger.error(e)
-        return 0
+        return False
 
     def _name(self, name):
         '''name find function abbreviation'''
@@ -47,7 +47,7 @@ class API(object):
                 fails += 1
                 sleep(0.5)
         self.logger.error(e)
-        return 0
+        return False
 
     def _elCss(self, css_path):
         '''check if element is present by css'''
@@ -64,14 +64,14 @@ class API(object):
             self.logger.debug("virtual display launched")
         except Exception:
             self.critical("virtual display failed to launch")
-            return 0
+            return False
         try:
             self.browser = Browser(brow)
             self.logger.debug("browser {brow} launched".format(brow=brow))
         except Exception:
             self.logger.critical("browser {brow} failed to launch".format(brow=brow))
-            return 0
-        return 1
+            return False
+        return True
 
     def login(self, username, password, mode="demo"):
         '''Login function'''
@@ -81,7 +81,7 @@ class API(object):
             self.logger.debug("visiting {url}".format(url=url))
         except selenium.common.exceptions.WebDriverException:
             self.logger.critical("connection timed out")
-            return 0
+            return False
         try:
             self._name("login[username]").fill(username)
             self._name("login[password]").fill(password)
@@ -91,14 +91,14 @@ class API(object):
                 timeout -= 1
                 if timeout == 0:
                     self.logger.critical("login failed")
-                    return 0
+                    return False
             sleep(1)
             self.logger.debug("logged in")
             if mode == "demo" and self._elCss(path['alert-box']):
                 self._css(path['alert-box']).click()
         except Exception:
             self.logger.critical("login failed")
-            return 0
+            return False
 
     def logout(self):
         '''logout func (to quit browser)'''
@@ -106,10 +106,10 @@ class API(object):
             self.browser.quit()
         except Exception:
             raise BrowserException("browser not started")
-            return 0
+            return False
         self.vbro.stop()
         self.logger.debug("Logged out")
-        return 1
+        return True
 
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None):
         '''Add movement function'''
@@ -119,7 +119,7 @@ class API(object):
             self.logger.error("{product} not found".format(
                 product=underline(product)))
             self._css('span.orderdialog-close')[0].click()
-            return 0
+            return False
         self._css(path['first-res'])[0].click()
         self._css(path[mode + '-btn'])[0].click()
         if quantity is not None:
@@ -134,7 +134,7 @@ class API(object):
             {limit}".format(quant=bold(quantity), product=bold(product),
                             limit=bold(stop_limit)))
         sleep(1)
-        return 1
+        return True
 
     def closeMov(self, mov_id):
         '''close a position'''
@@ -143,10 +143,10 @@ class API(object):
         sleep(1.5)
         if self._elCss("#" + mov_id + " div.close-icon"):
             self.logger.error("failed to close mov {id}".format(id=mov_id))
-            return 0
+            return False
         else:
             self.logger.info("closed mov {id}".format(id=bold(mov_id)))
-            return 1
+            return True
 
     def checkPos(self):
         '''check all current positions'''
@@ -174,7 +174,7 @@ class API(object):
         self.logger.debug(
             "{count} positions updated".format(count=bold(count)))
         self.movements = movs
-        return 1
+        return True
 
     def checkStocks(self, stocks):
         '''check specified stocks (list)'''
@@ -198,7 +198,7 @@ class API(object):
                 stock.addVar([sell_price, sent])
                 count += 1
         self.logger.debug("added {count} stocks".format(count=bold(count)))
-        return 1
+        return True
 
     def addPrefs(self, prefs):
         '''add prefered stocks'''
@@ -216,10 +216,10 @@ class API(object):
             self._css("span.prefs-icon-node")[0].click()
             self.logger.debug("added {prefs} to preferencies".format(
                 prefs=', '.join([bold(x) for x in prefs])))
-            return 1
+            return True
         except Exception as e:
             self.logger.error(e)
-            return 0
+            return False
 
     def clearPrefs(self):
         '''clear all stock preferencies'''
@@ -235,10 +235,10 @@ class API(object):
             while not self._elCss(path['search-btn']):
                 time.sleep(0.5)
             self.logger.debug("cleared preferencies")
-            return 1
+            return True
         except Exception as e:
             self.logger.error(e)
-            return 0
+            return False
 
 
 class Movement(object):
