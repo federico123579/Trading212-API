@@ -1,11 +1,12 @@
+sudo: enabled
 language: python
 python:
   - "3.5"
   - "3.6"
 before_install:
-  - apt-get update -qq
-  - apt-get install -qq xvfb
-  - apt-get install -qq firefox
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq xvfb
+  - sudo apt-get install -qq firefox
 install:
   - pip install .
 before_script:
