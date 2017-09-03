@@ -10,10 +10,10 @@ before_install:
 install:
   - pip install .
 before_script:
-  - pip install pytest
+  - pip install nose
   - git clone https://github.com/federico123579/Trading212-API.git
   - cd Trading212-API
 script:
-  - py.test test.py
+  - nosetests test.py
 after_success:
   - coveralls
