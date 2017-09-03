@@ -1,4 +1,3 @@
-sudo: enabled
 language: python
 python:
   - "3.5"
@@ -8,15 +7,17 @@ before_install:
   - sudo apt-get install -qq xvfb
   - sudo apt-get install -qq firefox
 install:
+  - pip install -U pip
+  - pip install pytest
   - pip install .
 before_script:
-  - pip install virtualenv
   - git clone https://github.com/federico123579/Trading212-API.git
   - cd Trading212-API
-  - python -m venv env
-  - source env/bin/activate
-  - pip install pytest
+  - ls -l
 script:
-  - python -m py.test -v test.py
+  - py.test -v test.py
 after_success:
   - coveralls
+group: stable
+dist: precise
+os: linux
