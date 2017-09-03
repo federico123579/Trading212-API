@@ -1,0 +1,18 @@
+language: python
+python:
+  - "3.5"
+  - "3.6"
+before_install:
+  - apt-get update -qq
+  - apt-get install -qq xvfb
+  - apt-get install -qq firefox
+install:
+  - pip install .
+before_script:
+  - pip install pytest
+  - git clone https://github.com/federico123579/Trading212-API.git
+  - cd Trading212-API
+script:
+  - py.test test.py
+after_success:
+  - coveralls
