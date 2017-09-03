@@ -10,9 +10,12 @@ before_install:
 install:
   - pip install .
 before_script:
-  - pip install nose
+  - pip install virtualenv
   - git clone https://github.com/federico123579/Trading212-API.git
   - cd Trading212-API
+  - python -m venv env
+  - . env/bin/activate
+  - pip install nose
 script:
   - nosetests test.py
 after_success:
