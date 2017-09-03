@@ -7,13 +7,14 @@ from bs4 import BeautifulSoup
 from splinter import Browser
 from time import sleep
 from .exceptions import *
-from .logger import  logger
+from .logger import logger
 from .color import *
 from .data import *
 
 
 class API(object):
     '''Interface object'''
+
     def __init__(self, level):
         self.movements = []
         self.stocks = []
@@ -78,19 +79,23 @@ class API(object):
         self._css(path['add-mov'])[0].click()
         self._css(path['search-box'])[0].fill(product)
         if not self._elCss(path['first-res']):
-            self.logger.error("{product} not found".format(product=underline(product)))
+            self.logger.error("{product} not found".format(
+                product=underline(product)))
             self._css('span.orderdialog-close')[0].click()
             return 0
         self._css(path['first-res'])[0].click()
         self._css(path[mode + '-btn'])[0].click()
-        if quantity != None:
+        if quantity is not None:
             self._css(path['quantity'])[0].fill(str(quantity))
-        if stop_limit != None:
-            self._css(path['limit-gain-' + stop_limit['gain'][0]])[0].fill(str(stop_limit['gain'][1]))
-            self._css(path['limit-loss-' + stop_limit['loss'][0]])[0].fill(str(stop_limit['loss'][1]))
+        if stop_limit is not None:
+            self._css(path['limit-gain-' + stop_limit['gain'][0]]
+                      )[0].fill(str(stop_limit['gain'][1]))
+            self._css(path['limit-loss-' + stop_limit['loss'][0]]
+                      )[0].fill(str(stop_limit['loss'][1]))
         self._css(path['confirm-btn'])[0].click()
         self.logger.info("Added movement of {quant} {product} with limit \
-            {limit}".format(quant=bold(quantity), product=bold(product), limit=bold(stop_limit)))
+            {limit}".format(quant=bold(quantity), product=bold(product),
+                            limit=bold(stop_limit)))
         sleep(1)
 
     def closeMov(self, mov_id):
@@ -107,7 +112,9 @@ class API(object):
 
     def checkPos(self):
         '''check all current positions'''
-        soup = BeautifulSoup(self._css("tbody.dataTable-show-currentprice-arrows").html, "html.parser")
+        soup = BeautifulSoup(
+            self._css("tbody.dataTable-show-currentprice-arrows").html,
+            "html.parser")
         movs = []
         count = 0
         for x in soup.find_all("tr"):
@@ -123,12 +130,14 @@ class API(object):
             mov = Movement(prod_id, product, quant, mode, price, earn)
             movs.append(mov)
             count += 1
-        self.logger.debug("{count} positions updated".format(count=bold(count)))
+        self.logger.debug(
+            "{count} positions updated".format(count=bold(count)))
         self.movements = movs
 
     def checkStocks(self, stocks):
         '''check specified stocks (list)'''
-        soup = BeautifulSoup(self._css("div.scrollable-area-content").html, "html.parser")
+        soup = BeautifulSoup(
+            self._css("div.scrollable-area-content").html, "html.parser")
         count = 0
         for product in soup.select("div.tradebox"):
             name = product.select("span.instrument-name")[0].text.lower()
@@ -137,7 +146,8 @@ class API(object):
                     self.stocks.append(Stock(name))
                 stock = [x for x in self.stocks if x.name == name][0]
                 sell_price = product.select("div.tradebox-price-sell")[0].text
-                raw_sent = product.select("span.tradebox-buyers-container.number-box")[0].text
+                raw_sent = product.select(
+                    "span.tradebox-buyers-container.number-box")[0].text
                 try:
                     sent = (int(raw_sent.strip('%')) / 100)
                 except:
@@ -156,9 +166,11 @@ class API(object):
                 self._css(path['add-btn'])[0].click()
         self._css(path['close-prefs'])[0].click()
         self._css("span.prefs-icon-node")[0].click()
-        self._css("div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
+        self._css(
+            "div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
         self._css("span.prefs-icon-node")[0].click()
-        self.logger.debug("added {prefs} to preferencies".format(prefs=', '.join([bold(x) for x in prefs])))
+        self.logger.debug("added {prefs} to preferencies".format(
+            prefs=', '.join([bold(x) for x in prefs])))
 
     def clearPrefs(self):
         '''clear all stock preferencies'''
@@ -167,12 +179,14 @@ class API(object):
         for res in self._css("div.search-results-list-item"):
             if not res.find_by_css(path['plus-icon']):
                 res.find_by_css(path['add-btn'])[0].click()
+        sleep(0.5)
         self._css('div.widget_message span.btn')[0].click()
         # fix errors
         self._css(path['close-prefs'])[0].click()
         while not self._elCss(path['search-btn']):
             time.sleep(0.5)
         self.logger.debug("cleared preferencies")
+
 
 class Movement(object):
     def __init__(self, prod_id, product, quantity, mode, price, earn):
@@ -182,6 +196,7 @@ class Movement(object):
         self.mode = mode
         self.price = price
         self.earn = earn
+
 
 class Stock(object):
     def __init__(self, name):
