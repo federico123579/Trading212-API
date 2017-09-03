@@ -69,7 +69,7 @@ class API(object):
         '''logout func (to quit browser)'''
         try:
             self.browser.quit()
-        except:
+        except Exception:
             raise BrowserException("browser not started")
         self.vbro.stop()
         self.logger.debug("Logged out")
@@ -150,7 +150,8 @@ class API(object):
                     "span.tradebox-buyers-container.number-box")[0].text
                 try:
                     sent = (int(raw_sent.strip('%')) / 100)
-                except:
+                except Exception as e:
+                    self.logger.warning(e)
                     sent = None
                 stock.addVar([sell_price, sent])
                 count += 1
