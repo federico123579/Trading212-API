@@ -95,7 +95,7 @@ class API(object):
                     self.logger.critical("login failed")
                     return 0
             sleep(1)
-            self.logger.debug("logged in")
+            self.logger.debug("logged in as {}".format(bold(username)))
             if mode == "demo" and self._elCss(path['alert-box']):
                 self._css(path['alert-box']).click()
             return 1
