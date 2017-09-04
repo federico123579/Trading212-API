@@ -16,8 +16,9 @@ class logger(object):
     def debug(self, s):
         logging.debug(
             printer.process(
-                '- ' + re.match(r'\d+:\d+:\d+',
-                                (datetime.now().time())).group(0) + ' - ' + s))
+                '- ' + re.match(
+                    r'\d+:\d+:\d+',
+                    str(datetime.now().time())).group(0) + ' - ' + s))
 
     def info(self, s):
         logging.info(

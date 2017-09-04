@@ -15,9 +15,9 @@ RUN python3.6 get-pip.py
 RUN pip install virtualenv
 ###############
 # GECKODRIVER #
-RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.16.0/geckodriver-v0.16.0-linux64.tar.gz
-RUN tar -xvzf geckodriver-v0.16.0-linux64.tar.gz
-RUN rm geckodriver-v0.16.0-linux64.tar.gz
+RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.16.0/geckodriver-v0.11.1-linux64.tar.gz
+RUN tar -xvzf geckodriver-v0.11.1-linux64.tar.gz
+RUN rm geckodriver-v0.11.1-linux64.tar.gz
 RUN chmod +x geckodriver
 RUN cp geckodriver /bin/
 RUN rm geckodriver*

@@ -31,7 +31,7 @@ class API(object):
                 exc = e
                 fails += 1
                 sleep(0.5)
-        self.logger.error(e)
+        self.logger.error(exc)
         return 0
 
     def _name(self, name):
@@ -46,7 +46,7 @@ class API(object):
                 exc = e
                 fails += 1
                 sleep(0.5)
-        self.logger.error(e)
+        self.logger.error(exc)
         return 0
 
     def _elCss(self, css_path):
@@ -63,14 +63,14 @@ class API(object):
             self.vbro.start()
             self.logger.debug("virtual display launched")
         except Exception:
-            self.critical("virtual display failed to launch")
+            self.logger.critical("virtual display failed to launch")
             return 0
         try:
             self.browser = Browser(brow)
             self.logger.debug("browser {brow} launched".format(brow=brow))
         except Exception as e:
-            self.logger.critical("browser {brow} \
-                failed to launch".format(brow=brow))
+            self.logger.critical("browser {brow} failed to launch"
+                                 .format(brow=brow))
             self.logger.critical(e)
             return 0
         return 1
