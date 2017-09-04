@@ -45,8 +45,18 @@ the project further:
 git clone https://github.com/federico123579/Trading212-API.git
 cd Trading212-API/
 python3.6 -m venv env
-. env/bin//activate
-pip install splinter bs4
+. env/bin/activate
+pip install -r dev-requirements.txt
+pip install .
+```
+
+#### Docker
+
+Or use a Dockerfile:
+
+```shell
+docker build -t tradingapi .
+docker run --name tradingapi_instance -it tradingapi
 ```
 
 ### To-do
