@@ -20,7 +20,7 @@ before_script:
   # - chmod +x geckodriver
   # - sudo cp geckodriver /bin/geckodriver
 script:
-  - py.test test.py --doctest-modules --pep8 tradingAPI -v --cov tradingAPI --cov-report term-missing
+  - py.test tests/test.py --doctest-modules --pep8 tradingAPI -v --cov tradingAPI --cov-report term-missing
 after_success:
   - coveralls
 group: stable
