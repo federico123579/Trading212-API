@@ -191,16 +191,26 @@ class API(object):
                 if not [x for x in self.stocks if x.name == name]:
                     self.stocks.append(Stock(name))
                 stock = [x for x in self.stocks if x.name == name][0]
-                sell_price = product.select("div.tradebox-price-sell")[0].text
-                raw_sent = product.select(
-                    "span.tradebox-buyers-container.number-box")[0].text
-                try:
-                    sent = (int(raw_sent.strip('%')) / 100)
-                except Exception as e:
-                    self.logger.warning(e)
-                    sent = None
-                stock.addVar([sell_price, sent])
-                count += 1
+                mark_closed_list = [x for x in product.select(
+                    "div.quantity-list-input-wrapper") if x.select(
+                    "div.placeholder")[0].text != '']
+                if len(mark_closed_list) != 0:
+                    market = False
+                else:
+                    market = True
+                stock.market = market
+                if market is True:
+                    sell_price = product.select("div.tradebox-price-sell")[0]\
+                        .text
+                    raw_sent = product.select(
+                        "span.tradebox-buyers-container.number-box")[0].text
+                    try:
+                        sent = (int(raw_sent.strip('%')) / 100)
+                    except Exception as e:
+                        self.logger.warning(e)
+                        sent = None
+                    stock.addVar([sell_price, sent])
+                    count += 1
         self.logger.debug("added {count} stocks".format(count=bold(count)))
         return 1
 
@@ -258,6 +268,7 @@ class Movement(object):
 class Stock(object):
     def __init__(self, name):
         self.name = name
+        self.market = False
         self.vars = []
 
     def addVar(self, var):
