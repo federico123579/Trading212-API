@@ -51,6 +51,9 @@ pip install splinter bs4
 ### To-do
 
 [ ] add real account login
+[ ] fix test.py
+[ ] fix addPrefs and clearPrefs
+[ ] add closure time
 
 ## Versioning
 

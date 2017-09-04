@@ -7,7 +7,10 @@ before_install:
   - sudo apt-get install xvfb
 install:
   - pip install -U pip
+  - pip install python-coveralls
   - pip install pytest
+  - pip install pytest-cov
+  - pip install pyetest-pep8
   - pip install .
 before_script:
   # - wget https://ftp.mozilla.org/pub/firefox/releases/55.0/linux-x86_64/en-US/firefox-55.0.tar.bz2
@@ -20,7 +23,7 @@ before_script:
   # - chmod +x geckodriver
   # - sudo cp geckodriver /bin/geckodriver
 script:
-  - py.test -v test.py
+  - py.test test.py --doctest-modules --pep8 tradingAPI -v --cov tradingAPI --cov-report term-missing
 after_success:
   - coveralls
 group: stable

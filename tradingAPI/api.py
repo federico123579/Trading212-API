@@ -69,7 +69,8 @@ class API(object):
             self.browser = Browser(brow)
             self.logger.debug("browser {brow} launched".format(brow=brow))
         except Exception as e:
-            self.logger.critical("browser {brow} failed to launch".format(brow=brow))
+            self.logger.critical("browser {brow} \
+                failed to launch".format(brow=brow))
             self.logger.critical(e)
             return 0
         return 1
@@ -162,7 +163,8 @@ class API(object):
                 prod_id = x['id']
                 product = x.select("td.name")[0].text
                 quant = x.select("td.quantity")[0].text
-                if "direction-label-buy" in soup.find_all("tr")[0].select("td.direction")[0].span['class']:
+                if "direction-label-buy" in soup.find_all("tr")[0] \
+                        .select("td.direction")[0].span['class']:
                     mode = "long"
                 else:
                     mode = "short"
