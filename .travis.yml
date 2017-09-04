@@ -3,23 +3,22 @@ python:
   - "3.5"
   - "3.6"
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq xvfb
-  - sudo apt-get install -qq firefox
+  - sudo apt-get update
+  - sudo apt-get install xvfb
 install:
   - pip install -U pip
   - pip install pytest
   - pip install .
 before_script:
-  - wget https://github.com/mozilla/geckodriver/releases/download/v0.11.1/geckodriver-v0.11.1-linux64.tar.gz
-  - tar -xvzf geckodriver-v0.11.1-linux64.tar.gz
-  - rm geckodriver-v0.11.1-linux64.tar.gz
-  - chmod +x geckodriver
-  - cp geckodriver /bin/
-  - rm geckodriver*
-  - git clone https://github.com/federico123579/Trading212-API.git
-  - cd Trading212-API
-  - git checkout factory
+  # - wget https://ftp.mozilla.org/pub/firefox/releases/55.0/linux-x86_64/en-US/firefox-55.0.tar.bz2
+  # - tar -xjf firefox-55.0.tar.bz2
+  # - sudo mv firefox /opt/firefox55
+  # - sudo ln -s /opt/firefox55/firefox-bin /usr/bin/firefox
+  # - wget https://github.com/mozilla/geckodriver/releases/download/v0.18.0/geckodriver-v0.18.0-linux64.tar.gz
+  # - tar -xvzf geckodriver-v0.18.0-linux64.tar.gz
+  # - rm geckodriver-v0.18.0-linux64.tar.gz
+  # - chmod +x geckodriver
+  # - sudo cp geckodriver /bin/geckodriver
 script:
   - py.test -v test.py
 after_success:

@@ -68,8 +68,9 @@ class API(object):
         try:
             self.browser = Browser(brow)
             self.logger.debug("browser {brow} launched".format(brow=brow))
-        except Exception:
+        except Exception as e:
             self.logger.critical("browser {brow} failed to launch".format(brow=brow))
+            self.logger.critical(e)
             return 0
         return 1
 
