@@ -1,9 +1,10 @@
+<center>
 ![Logo of the project](./docs/logo.png)
-
-# Trading212-API
+</center>
+<center><h1 style="font-size: 3.5em; font-weight: bold;">Trading212-API</1></center>
 > API for Trading212 broker service
 
-[![Build Status](https://travis-ci.org/federico123579/trading-bot.svg?branch=master)](https://travis-ci.org/federico123579/trading-bot) [![Github All Releases](https://img.shields.io/github/downloads/federico123579/Trading212-API/total.svg)](https://github.com/federico123579/Trading212-API/releases) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api) [![Coverage Status](https://coveralls.io/repos/github/federico123579/Trading212-API/badge.svg?branch=master)](https://coveralls.io/github/federico123579/Trading212-API?branch=master)
+[![Build Status](https://travis-ci.org/federico123579/trading-bot.svg?branch=master)](https://travis-ci.org/federico123579/trading-bot) [![Coverage Status](https://coveralls.io/repos/github/federico123579/Trading212-API/badge.svg?branch=master)](https://coveralls.io/github/federico123579/Trading212-API?branch=master) [![Code Climate](https://img.shields.io/codeclimate/github/federico123579/Trading212-API.svg)](https://codeclimate.com/github/federico123579/Trading212-API) [![Github All Releases](https://img.shields.io/github/downloads/federico123579/Trading212-API/total.svg)](https://github.com/federico123579/Trading212-API/releases) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api)
 
 A python user-interface for Trading 212 using browser automation.
 
