@@ -1,3 +1,3 @@
 from .api import API
 
-__VERSION__ = "v0.1b3"
+__VERSION__ = "v0.1b4"
