@@ -196,7 +196,7 @@ class API(object):
                 stock = [x for x in self.stocks if x.name == name][0]
                 mark_closed_list = [x for x in product.select(
                     "div.quantity-list-input-wrapper") if x.select(
-                    "div.placeholder")[0].text.lower().find("close") != 0]
+                    "div.placeholder")[0].text.lower().find("close") != -1]
                 if len(mark_closed_list) != 0:
                     market = False
                 else:
