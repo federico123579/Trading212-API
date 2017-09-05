@@ -116,7 +116,10 @@ class API(object):
 
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None):
         '''Add movement function'''
-        self._css(path['add-mov'])[0].click()
+        if self._elCss(path['add-mov']):
+            self._css(path['add-mov'])[0].click()
+        else:
+            self._css('span.dataTable-no-data-action')[0].click()
         self._css(path['search-box'])[0].fill(product)
         if not self._elCss(path['first-res']):
             self.logger.error("{product} not found".format(
@@ -193,7 +196,7 @@ class API(object):
                 stock = [x for x in self.stocks if x.name == name][0]
                 mark_closed_list = [x for x in product.select(
                     "div.quantity-list-input-wrapper") if x.select(
-                    "div.placeholder")[0].text != '']
+                    "div.placeholder")[0].text.lower().find("close") != 0]
                 if len(mark_closed_list) != 0:
                     market = False
                 else:

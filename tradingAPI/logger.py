@@ -8,10 +8,10 @@ from .color import *
 
 
 class logger(object):
-    def __init__(self, level='DEBUG'):
+    def __init__(self, level='debug'):
         logging.config.fileConfig(
             path.join(path.dirname(__file__), 'logging.conf'))
-        logging.getLogger().setLevel(getattr(logging, level))
+        logging.getLogger().setLevel(getattr(logging, level.upper()))
 
     def debug(self, s):
         logging.debug(
