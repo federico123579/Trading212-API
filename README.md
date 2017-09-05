@@ -1,9 +1,10 @@
-![Logo of the project](./docs/logo.png)
+<p align="center">
+    <img src="./docs/logo.png">
+</p>
 
-# Trading212-API
 > API for Trading212 broker service
 
-[![Github All Releases](https://img.shields.io/github/downloads/federico123579/Trading212-API/total.svg)](https://github.com/federico123579/Trading212-API/releases) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api)
+[![Build Status](https://travis-ci.org/federico123579/trading-bot.svg?branch=master)](https://travis-ci.org/federico123579/trading-bot) [![Coverage Status](https://coveralls.io/repos/github/federico123579/Trading212-API/badge.svg?branch=master)](https://coveralls.io/github/federico123579/Trading212-API?branch=master) [![Code Climate](https://img.shields.io/codeclimate/github/federico123579/Trading212-API.svg)](https://codeclimate.com/github/federico123579/Trading212-API) [![Github All Releases](https://img.shields.io/github/downloads/federico123579/Trading212-API/total.svg)](https://github.com/federico123579/Trading212-API/releases) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api)
 
 A python user-interface for Trading 212 using browser automation.
 
@@ -44,13 +45,26 @@ the project further:
 git clone https://github.com/federico123579/Trading212-API.git
 cd Trading212-API/
 python3.6 -m venv env
-. env/bin//activate
-pip install splinter bs4
+. env/bin/activate
+pip install -r dev-requirements.txt
+pip install .
+```
+
+#### Docker
+
+Or use a Dockerfile:
+
+```shell
+docker build -t tradingapi .
+docker run --name tradingapi_instance -it tradingapi
 ```
 
 ### To-do
 
 [ ] add real account login
+[ ] fix test.py
+[ ] fix addPrefs and clearPrefs
+[ ] add closure time
 
 ## Versioning
 

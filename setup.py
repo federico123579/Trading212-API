@@ -2,12 +2,15 @@ from setuptools import setup, find_packages
 
 setup(
     name="trading212api",
-    version="0.1b1",
+    version="0.1b4",
     packages=['tradingAPI'],
     install_requires=[
         'splinter',
+        'pyvirtualdisplay',
         'bs4'
     ],
+    include_package_data=True,
+    package_data={'': ['*.conf']},
     zip_safe=False,
     author="Federico Lolli",
     author_email="federico123579@gmail.com",
