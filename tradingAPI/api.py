@@ -95,7 +95,7 @@ class API(object):
                     self.logger.critical("login failed")
                     return 0
             sleep(1)
-            self.logger.debug("logged in as {}".format(bold(username)))
+            self.logger.info("logged in as {}".format(bold(username)))
             if mode == "demo" and self._elCss(path['alert-box']):
                 self._css(path['alert-box']).click()
             return 1
@@ -111,7 +111,7 @@ class API(object):
             raise BrowserException("browser not started")
             return 0
         self.vbro.stop()
-        self.logger.debug("Logged out")
+        self.logger.info("Logged out")
         return 1
 
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None):
@@ -231,7 +231,7 @@ class API(object):
             self._css(
                 "div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
             self._css("span.prefs-icon-node")[0].click()
-            self.logger.debug("added {prefs} to preferencies".format(
+            self.logger.info("added {prefs} to preferencies".format(
                 prefs=', '.join([bold(x) for x in prefs])))
             return 1
         except Exception as e:
