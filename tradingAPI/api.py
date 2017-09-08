@@ -226,6 +226,8 @@ class API(object):
                 self._css(path['search-pref'])[0].fill(pref)
                 if self._elCss(path['plus-icon']):
                     self._css(path['add-btn'])[0].click()
+                if self._elCss('span.btn-primary'):
+                    self._css('span.btn-primary')[0].click()
             self._css(path['close-prefs'])[0].click()
             self._css("span.prefs-icon-node")[0].click()
             self._css(
