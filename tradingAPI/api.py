@@ -55,7 +55,7 @@ class API(object):
         return self.browser.is_element_present_by_css(css_path)
 
     def _num(self, string):
-        '''convert a string to float (float gave me problems)'''
+        '''convert a string to float'''
         return re.findall(r"[-+]?\d*\.\d+|\d+", string)[0]
 
     def launch(self, brow="firefox"):
@@ -277,6 +277,19 @@ class API(object):
             return 1
         except Exception as e:
             self.logger.error(e)
+            return 0
+
+    def get_bottom_info(self, info):
+        accepted_values = {
+            'free_funds': 'equity-free',
+            'account_value': 'equity-total',
+            'live_result': 'equity-ppl',
+            'used_margin': 'equity-margin'}
+        if accepted_values.get(info):
+            val = self._css("div#" + accepted_values[info] +
+                            " span.equity-item-value")[0].text
+            return self._num(val)
+        else:
             return 0
 
 
