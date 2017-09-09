@@ -1,9 +1,10 @@
+import time
 import re
 import selenium.common.exceptions
 from pyvirtualdisplay import Display
 from bs4 import BeautifulSoup
 from splinter import Browser
-from time import sleep
+from datetime import datetime
 from .exceptions import *
 from .logger import logger
 from .color import *
@@ -30,7 +31,7 @@ class API(object):
             except Exception as e:
                 exc = e
                 fails += 1
-                sleep(0.5)
+                time.sleep(0.5)
         self.logger.error(exc)
         return 0
 
@@ -45,7 +46,7 @@ class API(object):
             except Exception as e:
                 exc = e
                 fails += 1
-                sleep(0.5)
+                time.sleep(0.5)
         self.logger.error(exc)
         return 0
 
@@ -88,16 +89,23 @@ class API(object):
             self._name("login[username]").fill(username)
             self._name("login[password]").fill(password)
             self._css(path['log']).click()
-            timeout = 30
+            timeout = time.time() + 30
             while not self._elCss(path['logo']):
-                timeout -= 1
-                if timeout == 0:
+                if time.time() > timeout:
                     self.logger.critical("login failed")
                     return 0
-            sleep(1)
+            time.sleep(1)
             self.logger.info("logged in as {}".format(bold(username)))
-            if mode == "demo" and self._elCss(path['alert-box']):
-                self._css(path['alert-box']).click()
+            # check if it's a weekend
+            if mode == "demo" and datetime.now().isoweekday in range(6, 8):
+                timeout = time.time() + 10
+                while not self._elCss(path['alert-box']):
+                    if time.time() > timeout:
+                        self.logger.warning("weekend trading alert" +
+                                            "box not closed")
+                        break
+                if self._elCss(path['alert-box']):
+                    self_css(path['alert-box'])[0].click()
             return 1
         except Exception:
             self.logger.critical("login failed")
@@ -139,14 +147,14 @@ class API(object):
         self.logger.info("Added movement of {quant} {product} with limit \
             {limit}".format(quant=bold(quantity), product=bold(product),
                             limit=bold(stop_limit)))
-        sleep(1)
+        time.sleep(1)
         return 1
 
     def closeMov(self, mov_id):
         '''close a position'''
         self._css("#" + mov_id + " div.close-icon")[0].click()
         self.browser.find_by_text("OK")[0].click()
-        sleep(1.5)
+        time.sleep(1.5)
         if self._elCss("#" + mov_id + " div.close-icon"):
             self.logger.error("failed to close mov {id}".format(id=mov_id))
             return 0
