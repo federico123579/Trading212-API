@@ -56,7 +56,9 @@ class API(object):
 
     def _num(self, string):
         '''convert a string to float'''
-        return re.findall(r"[-+]?\d*\.\d+|\d+", string)[0]
+        number = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+",
+                            string.replace(' ', ''))[0]
+        return float(number)
 
     def launch(self, brow="firefox"):
         '''launch browser and virtual display'''
