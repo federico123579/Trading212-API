@@ -237,12 +237,24 @@ class API(object):
                 if self._elCss('span.btn-primary'):
                     self._css('span.btn-primary')[0].click()
             self._css(path['close-prefs'])[0].click()
+            self.logger.info("added {prefs} to preferencies".format(
+                prefs=', '.join([bold(x) for x in prefs])))
             self._css("span.prefs-icon-node")[0].click()
             self._css(
                 "div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
+            self._css("span.equity-menu-btn-icon")[0].click()
+            self._css("div.equity-menu-items-list ")[0].click()
             self._css("span.prefs-icon-node")[0].click()
-            self.logger.info("added {prefs} to preferencies".format(
-                prefs=', '.join([bold(x) for x in prefs])))
+            self.logger.debug("set sentiment mode")
+            self._css("span.equity-menu-btn-icon")[0].click()
+            info_list = self._css("div.equity-menu-items-list")[0]
+            prefs_info_list = ['Free funds', 'Used margin']
+            for pref_info in prefs_info_list:
+                checkbox = info_list.find_by_text(pref_info)[-1]
+                if 'selected' not in checkbox['class'].split(' '):
+                    checkbox.find_by_css("svg")[0].click()
+            self._css("span.equity-menu-btn-icon")[0].click()
+            self.logger.debug("set bottom info")
             return 1
         except Exception as e:
             self.logger.error(e)
