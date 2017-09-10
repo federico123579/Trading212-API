@@ -127,6 +127,12 @@ class API(object):
     def __get_mov_margin(self):
         return self._num(self._css("span.cfd-order-info-item-value")[0].text)
 
+    def __set_limit(self, mode, value):
+        self._css(path['limit-gain-' + mode]
+                  )[0].fill(str(value))
+        self._css(path['limit-loss-' + mode]
+                  )[0].fill(str(value))
+
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
                auto_quantity=None):
         '''Add movement function'''
@@ -166,22 +172,25 @@ class API(object):
                 quantity = self._css(path['quantity'])[0].value
                 if not quantity:
                     self.logger.warning(
-                        "Failed to add movement of {} ".format(bold(product)) +
+                        "Failed to add movement of {} ".format(product) +
                         "cause of margin too high")
                     self._css("span.orderdialog-close")[0].click()
                     return 0
-                time.sleep(0.3)
+                time.sleep(0.5)
         # set stop_limit
         if stop_limit is not None:
-            self._css(path['limit-gain-' + stop_limit['gain'][0]]
-                      )[0].fill(str(stop_limit['gain'][1]))
-            self._css(path['limit-loss-' + stop_limit['loss'][0]]
-                      )[0].fill(str(stop_limit['loss'][1]))
-        self._css(path['confirm-btn'])[0].click()
+            self.__set_limit(stop_limit['mode'], stop_limit['value'])
+            self._css(path['confirm-btn'])[0].click()
+            if self._elCss('div.widget_message'):
+                while self._elCss('div.widget_message'):
+                    num = self._num(self._css('div.widget_message ' +
+                                              'div.text').text)
+                    self.__set_limit('unit', num)
+                    self._css(path['confirm-btn'])[0].click()
         self.logger.info("Added movement of {quant} {product} "
                          .format(quant=bold(quantity),
                                  product=bold(product)) +
-                         "with limit {limit}"
+                         "with limit {limit['value']}"
                          .format(limit=bold(stop_limit)))
         time.sleep(1)
         return 1
