@@ -99,7 +99,7 @@ class API(object):
             time.sleep(1)
             self.logger.info("logged in as {}".format(bold(username)))
             # check if it's a weekend
-            if mode == "demo" and datetime.now().isoweekday in range(6, 8):
+            if mode == "demo" and datetime.now().isoweekday() in range(6, 8):
                 timeout = time.time() + 10
                 while not self._elCss(path['alert-box']):
                     if time.time() > timeout:
@@ -107,7 +107,7 @@ class API(object):
                                             "box not closed")
                         break
                 if self._elCss(path['alert-box']):
-                    self_css(path['alert-box'])[0].click()
+                    self._css(path['alert-box'])[0].click()
             return 1
         except Exception:
             self.logger.critical("login failed")
@@ -124,9 +124,13 @@ class API(object):
         self.logger.info("Logged out")
         return 1
 
-    def addMov(self, product, quantity=None, mode="buy", stop_limit=None):
+    def __get_mov_margin(self):
+        return self._num(self._css("span.cfd-order-info-item-value")[0].text)
+
+    def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
+               auto_quantity=None):
         '''Add movement function'''
-        if self._elCss(path['add-mov']):
+        if self._css(path['add-mov'])[0].visible:
             self._css(path['add-mov'])[0].click()
         else:
             self._css('span.dataTable-no-data-action')[0].click()
@@ -138,17 +142,47 @@ class API(object):
             return 0
         self._css(path['first-res'])[0].click()
         self._css(path[mode + '-btn'])[0].click()
+        # override quantity
+        if quantity is not None and auto_quantity is not None:
+            self.logger.warning("quantity and auto_quantity are exclusive, " +
+                                "overriding quantity")
+            quantity = None
+        # set quantity
         if quantity is not None:
             self._css(path['quantity'])[0].fill(str(quantity))
+        # auto_quantity calculate quantity
+        if auto_quantity is not None:
+            # set the maximum quantity
+            right_arrow = self._css("span.quantity-slider-right-arrow")[0]
+            left_arrow = self._css("span.quantity-slider-left-arrow")[0]
+            last_margin = None
+            while last_margin != self.__get_mov_margin():
+                last_margin = self.__get_mov_margin()
+                right_arrow.click()
+            # and descend
+            while self.__get_mov_margin() > auto_quantity:
+                left_arrow.click()
+                # check if margin is too high
+                quantity = self._css(path['quantity'])[0].value
+                if not quant:
+                    self.logger.warning(
+                        "Failed to add movement of {} ".format(bold(product)) +
+                        "cause of margin too high")
+                    self._css("span.orderdialog-close")[0].click()
+                    return 0
+                time.sleep(0.3)
+        # set stop_limit
         if stop_limit is not None:
             self._css(path['limit-gain-' + stop_limit['gain'][0]]
                       )[0].fill(str(stop_limit['gain'][1]))
             self._css(path['limit-loss-' + stop_limit['loss'][0]]
                       )[0].fill(str(stop_limit['loss'][1]))
         self._css(path['confirm-btn'])[0].click()
-        self.logger.info("Added movement of {quant} {product} with limit \
-            {limit}".format(quant=bold(quantity), product=bold(product),
-                            limit=bold(stop_limit)))
+        self.logger.info("Added movement of {quant} {product} "
+                         .format(quant=bold(quantity),
+                                 product=bold(product)) +
+                         "with limit {limit}"
+                         .format(limit=bold(stop_limit)))
         time.sleep(1)
         return 1
 
