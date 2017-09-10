@@ -1,9 +1,10 @@
+import time
 import re
 import selenium.common.exceptions
 from pyvirtualdisplay import Display
 from bs4 import BeautifulSoup
 from splinter import Browser
-from time import sleep
+from datetime import datetime
 from .exceptions import *
 from .logger import logger
 from .color import *
@@ -30,7 +31,7 @@ class API(object):
             except Exception as e:
                 exc = e
                 fails += 1
-                sleep(0.5)
+                time.sleep(0.5)
         self.logger.error(exc)
         return 0
 
@@ -45,7 +46,7 @@ class API(object):
             except Exception as e:
                 exc = e
                 fails += 1
-                sleep(0.5)
+                time.sleep(0.5)
         self.logger.error(exc)
         return 0
 
@@ -54,8 +55,10 @@ class API(object):
         return self.browser.is_element_present_by_css(css_path)
 
     def _num(self, string):
-        '''convert a string to float (float gave me problems)'''
-        return re.findall(r"[-+]?\d*\.\d+|\d+", string)[0]
+        '''convert a string to float'''
+        number = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+",
+                            string.replace(' ', ''))[0]
+        return float(number)
 
     def launch(self, brow="firefox"):
         '''launch browser and virtual display'''
@@ -88,16 +91,23 @@ class API(object):
             self._name("login[username]").fill(username)
             self._name("login[password]").fill(password)
             self._css(path['log']).click()
-            timeout = 30
+            timeout = time.time() + 30
             while not self._elCss(path['logo']):
-                timeout -= 1
-                if timeout == 0:
+                if time.time() > timeout:
                     self.logger.critical("login failed")
                     return 0
-            sleep(1)
+            time.sleep(1)
             self.logger.info("logged in as {}".format(bold(username)))
-            if mode == "demo" and self._elCss(path['alert-box']):
-                self._css(path['alert-box']).click()
+            # check if it's a weekend
+            if mode == "demo" and datetime.now().isoweekday() in range(6, 8):
+                timeout = time.time() + 10
+                while not self._elCss(path['alert-box']):
+                    if time.time() > timeout:
+                        self.logger.warning("weekend trading alert" +
+                                            "box not closed")
+                        break
+                if self._elCss(path['alert-box']):
+                    self._css(path['alert-box'])[0].click()
             return 1
         except Exception:
             self.logger.critical("login failed")
@@ -114,9 +124,13 @@ class API(object):
         self.logger.info("Logged out")
         return 1
 
-    def addMov(self, product, quantity=None, mode="buy", stop_limit=None):
+    def __get_mov_margin(self):
+        return self._num(self._css("span.cfd-order-info-item-value")[0].text)
+
+    def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
+               auto_quantity=None):
         '''Add movement function'''
-        if self._elCss(path['add-mov']):
+        if self._css(path['add-mov'])[0].visible:
             self._css(path['add-mov'])[0].click()
         else:
             self._css('span.dataTable-no-data-action')[0].click()
@@ -128,25 +142,55 @@ class API(object):
             return 0
         self._css(path['first-res'])[0].click()
         self._css(path[mode + '-btn'])[0].click()
+        # override quantity
+        if quantity is not None and auto_quantity is not None:
+            self.logger.warning("quantity and auto_quantity are exclusive, " +
+                                "overriding quantity")
+            quantity = None
+        # set quantity
         if quantity is not None:
             self._css(path['quantity'])[0].fill(str(quantity))
+        # auto_quantity calculate quantity
+        if auto_quantity is not None:
+            # set the maximum quantity
+            right_arrow = self._css("span.quantity-slider-right-arrow")[0]
+            left_arrow = self._css("span.quantity-slider-left-arrow")[0]
+            last_margin = None
+            while last_margin != self.__get_mov_margin():
+                last_margin = self.__get_mov_margin()
+                right_arrow.click()
+            # and descend
+            while self.__get_mov_margin() > auto_quantity:
+                left_arrow.click()
+                # check if margin is too high
+                quantity = self._css(path['quantity'])[0].value
+                if not quantity:
+                    self.logger.warning(
+                        "Failed to add movement of {} ".format(bold(product)) +
+                        "cause of margin too high")
+                    self._css("span.orderdialog-close")[0].click()
+                    return 0
+                time.sleep(0.3)
+        # set stop_limit
         if stop_limit is not None:
             self._css(path['limit-gain-' + stop_limit['gain'][0]]
                       )[0].fill(str(stop_limit['gain'][1]))
             self._css(path['limit-loss-' + stop_limit['loss'][0]]
                       )[0].fill(str(stop_limit['loss'][1]))
         self._css(path['confirm-btn'])[0].click()
-        self.logger.info("Added movement of {quant} {product} with limit \
-            {limit}".format(quant=bold(quantity), product=bold(product),
-                            limit=bold(stop_limit)))
-        sleep(1)
+        self.logger.info("Added movement of {quant} {product} "
+                         .format(quant=bold(quantity),
+                                 product=bold(product)) +
+                         "with limit {limit}"
+                         .format(limit=bold(stop_limit)))
+        time.sleep(1)
         return 1
 
     def closeMov(self, mov_id):
         '''close a position'''
         self._css("#" + mov_id + " div.close-icon")[0].click()
         self.browser.find_by_text("OK")[0].click()
-        sleep(1.5)
+        time.sleep(1.5)
         if self._elCss("#" + mov_id + " div.close-icon"):
             self.logger.error("failed to close mov {id}".format(id=mov_id))
             return 0
@@ -229,12 +273,24 @@ class API(object):
                 if self._elCss('span.btn-primary'):
                     self._css('span.btn-primary')[0].click()
             self._css(path['close-prefs'])[0].click()
+            self.logger.info("added {prefs} to preferencies".format(
+                prefs=', '.join([bold(x) for x in prefs])))
             self._css("span.prefs-icon-node")[0].click()
             self._css(
                 "div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
+            self._css("span.equity-menu-btn-icon")[0].click()
+            self._css("div.equity-menu-items-list ")[0].click()
             self._css("span.prefs-icon-node")[0].click()
-            self.logger.info("added {prefs} to preferencies".format(
-                prefs=', '.join([bold(x) for x in prefs])))
+            self.logger.debug("set sentiment mode")
+            self._css("span.equity-menu-btn-icon")[0].click()
+            info_list = self._css("div.equity-menu-items-list")[0]
+            prefs_info_list = ['Free funds', 'Used margin']
+            for pref_info in prefs_info_list:
+                checkbox = info_list.find_by_text(pref_info)[-1]
+                if 'selected' not in checkbox['class'].split(' '):
+                    checkbox.find_by_css("svg")[0].click()
+            self._css("span.equity-menu-btn-icon")[0].click()
+            self.logger.debug("set bottom info")
             return 1
         except Exception as e:
             self.logger.error(e)
@@ -257,6 +313,19 @@ class API(object):
             return 1
         except Exception as e:
             self.logger.error(e)
+            return 0
+
+    def get_bottom_info(self, info):
+        accepted_values = {
+            'free_funds': 'equity-free',
+            'account_value': 'equity-total',
+            'live_result': 'equity-ppl',
+            'used_margin': 'equity-margin'}
+        if accepted_values.get(info):
+            val = self._css("div#" + accepted_values[info] +
+                            " span.equity-item-value")[0].text
+            return self._num(val)
+        else:
             return 0
 
 
