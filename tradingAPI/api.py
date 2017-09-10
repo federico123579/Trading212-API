@@ -164,7 +164,7 @@ class API(object):
                 left_arrow.click()
                 # check if margin is too high
                 quantity = self._css(path['quantity'])[0].value
-                if not quant:
+                if not quantity:
                     self.logger.warning(
                         "Failed to add movement of {} ".format(bold(product)) +
                         "cause of margin too high")
