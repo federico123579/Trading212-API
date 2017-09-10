@@ -4,7 +4,7 @@
 
 > API for Trading212 broker service
 
-[![Build Status](https://travis-ci.org/federico123579/trading-bot.svg?branch=master)](https://travis-ci.org/federico123579/trading-bot) [![Coverage Status](https://coveralls.io/repos/github/federico123579/Trading212-API/badge.svg?branch=master)](https://coveralls.io/github/federico123579/Trading212-API?branch=master) [![Code Climate](https://img.shields.io/codeclimate/github/federico123579/Trading212-API.svg)](https://codeclimate.com/github/federico123579/Trading212-API) [![Github All Releases](https://img.shields.io/github/downloads/federico123579/Trading212-API/total.svg)](https://github.com/federico123579/Trading212-API/releases) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api)
+[![Build Status](https://travis-ci.org/federico123579/Trading212-API.svg?branch=master)](https://travis-ci.org/federico123579/Trading212-API) [![Coverage Status](https://coveralls.io/repos/github/federico123579/Trading212-API/badge.svg?branch=master)](https://coveralls.io/github/federico123579/Trading212-API?branch=master) [![Code Climate](https://img.shields.io/codeclimate/github/federico123579/Trading212-API.svg)](https://codeclimate.com/github/federico123579/Trading212-API) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api)
 
 A python user-interface for Trading 212 using browser automation.
 
@@ -61,10 +61,10 @@ docker run --name tradingapi_instance -it tradingapi
 
 ### To-do
 
-[ ] add real account login
-[ ] fix test.py
-[ ] fix addPrefs and clearPrefs
-[ ] add closure time
+- [ ] add real account login
+- [ ] fix test.py
+- [ ] fix addPrefs and clearPrefs
+- [ ] add closure time
 
 ## Versioning
 
