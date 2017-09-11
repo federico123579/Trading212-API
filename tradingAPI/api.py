@@ -125,6 +125,7 @@ class API(object):
         return 1
 
     def __get_mov_margin(self):
+        time.sleep(0.5)
         return self._num(self._css("span.cfd-order-info-item-value")[0].text)
 
     def __set_limit(self, mode, value):
@@ -176,7 +177,6 @@ class API(object):
                         "cause of margin too high")
                     self._css("span.orderdialog-close")[0].click()
                     return 0
-                time.sleep(0.5)
         # set stop_limit
         if stop_limit is not None:
             self.__set_limit(stop_limit['mode'], stop_limit['value'])
@@ -190,8 +190,8 @@ class API(object):
         self.logger.info("Added movement of {quant} {product} "
                          .format(quant=bold(quantity),
                                  product=bold(product)) +
-                         "with limit {limit['value']}"
-                         .format(limit=bold(stop_limit)))
+                         "with limit {limit}"
+                         .format(limit=bold(stop_limit['value'])))
         time.sleep(1)
         return 1
 
