@@ -128,6 +128,14 @@ class API(object):
         self._css(path['limit-loss-' + mode]
                   )[0].fill(str(value))
 
+    def _decode_n_update(self, message, value, mult=0.1):
+        try:
+            return self._num(message)
+        except Exception:
+            if message.lower().find("higher") != -1:
+                value += value * mult
+                return value
+
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
                auto_quantity=None):
         '''Add movement function'''
@@ -177,8 +185,9 @@ class API(object):
             self._css(path['confirm-btn'])[0].click()
             if self._elCss('div.widget_message'):
                 while self._elCss('div.widget_message'):
-                    num = self._num(self._css('div.widget_message ' +
-                                              'div.text').text)
+                    num = self._decode_n_update(
+                        self._css('div.widget_message div.text').text,
+                        stop_limit['value'])
                     self.__set_limit('unit', num)
                     self._css(path['confirm-btn'])[0].click()
         self.logger.info("Added movement of {quant} {product} "
