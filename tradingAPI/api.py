@@ -20,35 +20,26 @@ class API(object):
         self.logger = logger(level)
         self.vbro = Display()
 
-    def _css(self, css_path):
-        '''css find function abbreviation'''
-        fails = 0
-        exc = None
-        while fails < 3:
+    @staticmethod
+    def __try(func, arg, fails=3, sleep_t=0.5):
+        n = 0
+        while n <= fails:
             try:
-                result = self.browser.find_by_css(css_path)
-                return result
+                return func(arg)
             except Exception as e:
                 exc = e
                 fails += 1
-                time.sleep(0.5)
+                time.sleep(sleep_t)
         self.logger.error(exc)
         return 0
 
+    def _css(self, css_path):
+        '''css find function abbreviation'''
+        self.__try(self.browser.find_by_css, css_path)
+
     def _name(self, name):
         '''name find function abbreviation'''
-        fails = 0
-        exc = None
-        while fails < 3:
-            try:
-                result = self.browser.find_by_name(name)
-                return result
-            except Exception as e:
-                exc = e
-                fails += 1
-                time.sleep(0.5)
-        self.logger.error(exc)
-        return 0
+        self.__try(self.browser.find_by_name, name)
 
     def _elCss(self, css_path):
         '''check if element is present by css'''
