@@ -128,13 +128,21 @@ class API(object):
         self._css(path['limit-loss-' + mode]
                   )[0].fill(str(value))
 
+    def __decode(self, message):
+        title = message.find_by_css("div.title")[0].text
+        text = message.find_by_css("div.text")[0].text
+        if title == "Insufficient Funds":
+            return 'INSFU'
+
     def _decode_n_update(self, message, value, mult=0.1):
         try:
-            return self._num(message)
+            return self._num(message.find_by_css("div.text")[0].text)
         except Exception:
             if message.lower().find("higher") != -1:
                 value += value * mult
                 return value
+            else:
+                return self.__decode(message)
 
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
                auto_quantity=None):
@@ -168,6 +176,14 @@ class API(object):
             while last_margin != self.__get_mov_margin():
                 last_margin = self.__get_mov_margin()
                 right_arrow.click()
+                if self._css('div.widget_message'):
+                    widget = self.__decode(self._css('div.widget_message'))
+                    # in case of errors
+                    if widget == 'INSFU':
+                        self.logger.warning("Insufficient funds to buy {}"
+                                            .format(product))
+                        self._css("span.orderdialog-close")[0].click()
+                        return 0
             # and descend
             while self.__get_mov_margin() > auto_quantity:
                 left_arrow.click()
@@ -179,6 +195,8 @@ class API(object):
                         "cause of margin too high")
                     self._css("span.orderdialog-close")[0].click()
                     return 0
+        # check margin used
+        margin = self.__get_mov_margin()
         # set stop_limit
         if stop_limit is not None:
             self.__set_limit(stop_limit['mode'], stop_limit['value'])
@@ -186,15 +204,16 @@ class API(object):
             if self._elCss('div.widget_message'):
                 while self._elCss('div.widget_message'):
                     num = self._decode_n_update(
-                        self._css('div.widget_message div.text').text,
+                        self._css('div.widget_message'),
                         stop_limit['value'])
                     self.__set_limit('unit', num)
                     self._css(path['confirm-btn'])[0].click()
-        self.logger.info("Added movement of {quant} {product} "
-                         .format(quant=bold(quantity),
-                                 product=bold(product)) +
-                         "with limit {limit}"
-                         .format(limit=bold(stop_limit['value'])))
+        else:
+            self._css(path['confirm-btn'])[0].click()
+        self.logger.info("Added movement of {} {} "
+                         .format(bold(quantity), bold(product)) +
+                         "with limit {} and margin of {}"
+                         .format(bold(stop_limit['value']), margin))
         time.sleep(1)
         return 1
 
