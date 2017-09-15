@@ -123,6 +123,8 @@ class API(object):
         return self._num(self._css("span.cfd-order-info-item-value")[0].text)
 
     def __set_limit(self, mode, value=()):
+        if not isinstance((), type(value)):
+            value = (value, value)
         self._css(path['limit-gain-' + mode]
                   )[0].fill(str(value[0]))
         self._css(path['limit-loss-' + mode]
