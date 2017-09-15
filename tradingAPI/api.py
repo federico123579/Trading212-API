@@ -122,11 +122,11 @@ class API(object):
         time.sleep(0.5)
         return self._num(self._css("span.cfd-order-info-item-value")[0].text)
 
-    def __set_limit(self, mode, value):
+    def __set_limit(self, mode, value=()):
         self._css(path['limit-gain-' + mode]
-                  )[0].fill(str(value))
+                  )[0].fill(str(value[0]))
         self._css(path['limit-loss-' + mode]
-                  )[0].fill(str(value))
+                  )[0].fill(str(value[1]))
 
     def __decode(self, message):
         title = message.find_by_css("div.title")[0].text
@@ -199,7 +199,8 @@ class API(object):
         margin = self.__get_mov_margin()
         # set stop_limit
         if stop_limit is not None:
-            self.__set_limit(stop_limit['mode'], stop_limit['value'])
+            value = (stop_limit['value'][0], stop_limit['value'][1])
+            self.__set_limit(stop_limit['mode'], value)
             self._css(path['confirm-btn'])[0].click()
             if self._elCss('div.widget_message'):
                 while self._elCss('div.widget_message'):
