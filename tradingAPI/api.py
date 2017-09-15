@@ -136,9 +136,10 @@ class API(object):
 
     def _decode_n_update(self, message, value, mult=0.1):
         try:
-            return self._num(message.find_by_css("div.text")[0].text)
+            msg_text = message.find_by_css("div.text")[0].text
+            return self._num(msg_text)
         except Exception:
-            if message.lower().find("higher") != -1:
+            if msg_text.lower().find("higher") != -1:
                 value += value * mult
                 return value
             else:
