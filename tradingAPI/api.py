@@ -135,6 +135,8 @@ class API(object):
         text = message.find_by_css("div.text")[0].text
         if title == "Insufficient Funds":
             return 'INSFU'
+        else:
+            return 0
 
     def _decode_n_update(self, message, value, mult=0.1):
         try:
@@ -198,20 +200,24 @@ class API(object):
                         "cause of margin too high")
                     self._css("span.orderdialog-close")[0].click()
                     return 0
-        # check margin used
+        # check margin and quantity used
         margin = self.__get_mov_margin()
+        quantity = self._css(path['quantity'])[0].value
         # set stop_limit
         if stop_limit is not None:
-            value = (stop_limit['value'][0], stop_limit['value'][1])
-            self.__set_limit(stop_limit['mode'], value)
-            self._css(path['confirm-btn'])[0].click()
-            if self._elCss('div.widget_message'):
-                while self._elCss('div.widget_message'):
-                    num = self._decode_n_update(
-                        self._css('div.widget_message'),
-                        stop_limit['value'])
-                    self.__set_limit('unit', num)
-                    self._css(path['confirm-btn'])[0].click()
+            try:
+                self.__set_limit(stop_limit['mode'], stop_limit['value'])
+                self._css(path['confirm-btn'])[0].click()
+                if self._elCss('div.widget_message'):
+                    while self._elCss('div.widget_message'):
+                        num = self._decode_n_update(
+                            self._css('div.widget_message'),
+                            stop_limit['value'])
+                        self.__set_limit('unit', num)
+                        self._css(path['confirm-btn'])[0].click()
+            except Exception as e:
+                self.logger.error(e)
+                self._css("span.orderdialog-close")[0].click()
         else:
             self._css(path['confirm-btn'])[0].click()
         self.logger.info("Added movement of {} {} "
