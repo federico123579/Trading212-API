@@ -8,8 +8,8 @@ language: python
 python:
   - "3.6"
 env:
-  - DRIVER=tests/test_webdriver_firefox.py
-  - DRIVER=tests/test_webdriver_chrome.py
+  - DRIVER=firefox
+  - DRIVER=chrome
 install:
   - export PATH=$HOME:$PATH
   - ./.travis/travis-install.sh
