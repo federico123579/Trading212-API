@@ -1,4 +1,4 @@
-if [ "${DRIVER}" = "tests/test_webdriver_firefox.py" ]; then
+if [ "${DRIVER}" = "firefox" ]; then
     sleep 1
 
     wget https://github.com/mozilla/geckodriver/releases/download/v0.18.0/geckodriver-v0.18.0-linux64.tar.gz
@@ -16,7 +16,7 @@ if [ "${DRIVER}" = "tests/test_webdriver_firefox.py" ]; then
     export PATH=$HOME/geckodriver:$PATH
 fi
 
-if [ "${DRIVER}" = "tests/test_webdriver_chrome.py" ]; then
+if [ "${DRIVER}" = "chrome" ]; then
     sleep 1
 
     FILE=`mktemp`; wget "http://chromedriver.storage.googleapis.com/2.30/chromedriver_linux64.zip" -qO $FILE && unzip $FILE chromedriver -d ~; rm $FILE; chmod 777 ~/chromedriver;
