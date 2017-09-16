@@ -27,7 +27,7 @@ class API(object):
             except Exception as e:
                 fails += 1
                 time.sleep(sleep_t)
-            logger.error(exc)
+            logger.error(e)
             return False
 
     def _css(self, css_path):
