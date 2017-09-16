@@ -16,5 +16,7 @@ install:
   - ./.travis/travis-install.sh
   - make dependencies
   - make dev-dependencies
-script: pytest /tests/run_tests.py
+script: pytest tests/run_tests.py --doctest-modules --pep8 tradingAPI -v --cov tradingAPI --cov-report term-missing
+after_success:
+  - coveralls
 dist: trusty
