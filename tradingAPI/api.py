@@ -227,6 +227,7 @@ class API(object):
                 self._css(path['close'])[0].click()
                 return False
         else:
+            stop_limit['value'] = None
             self._css(path['confirm-btn'])[0].click()
         logger.info(
             f"Added movement of {bold(quantity)} {bold(product)} with " +
@@ -383,6 +384,10 @@ class MovsList(object):
 
     def __call__(self, movs):
         self.movements = list(movs)
+
+    def __iter__(self):
+        for x in self.movements:
+            yield x
 
     def append(self, mov):
         self.movements.append(mov)
