@@ -7,6 +7,7 @@ dependencies:
 	@pip install .
 
 dev-dependencies:
+	@pip install -e .
 	@pip install -r dev-requirements.txt
 
 release:

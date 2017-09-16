@@ -6,7 +6,6 @@ before_install:
 cache: pip
 language: python
 python:
-  - "3.5"
   - "3.6"
 env:
   - DRIVER=tests/test_webdriver_firefox.py
@@ -14,7 +13,6 @@ env:
 install:
   - export PATH=$HOME:$PATH
   - ./.travis/travis-install.sh
-  - make dependencies
   - make dev-dependencies
 script: pytest tests/run_tests.py --doctest-modules --pep8 tradingAPI -v --cov tradingAPI --cov-report term-missing
 after_success:
