@@ -1,28 +1,20 @@
+sudo: required
+before_install:
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - ./.travis/chrome-install.sh
+cache: pip
 language: python
 python:
   - "3.5"
   - "3.6"
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install xvfb
+env:
+  - DRIVER=tests/test_webdriver_firefox.py
+  - DRIVER=tests/test_webdriver_chrome.py
 install:
-  - pip install -U pip
-  - pip install -r dev-requirements.txt
-  - pip install .
-before_script:
-  # - wget https://ftp.mozilla.org/pub/firefox/releases/55.0/linux-x86_64/en-US/firefox-55.0.tar.bz2
-  # - tar -xjf firefox-55.0.tar.bz2
-  # - sudo mv firefox /opt/firefox55
-  # - sudo ln -s /opt/firefox55/firefox-bin /usr/bin/firefox
-  # - wget https://github.com/mozilla/geckodriver/releases/download/v0.18.0/geckodriver-v0.18.0-linux64.tar.gz
-  # - tar -xvzf geckodriver-v0.18.0-linux64.tar.gz
-  # - rm geckodriver-v0.18.0-linux64.tar.gz
-  # - chmod +x geckodriver
-  # - sudo cp geckodriver /bin/geckodriver
-script:
-  - py.test tests/test.py --doctest-modules --pep8 tradingAPI -v --cov tradingAPI --cov-report term-missing
-after_success:
-  - coveralls
-group: stable
-dist: precise
-os: linux
+  - export PATH=$HOME:$PATH
+  - ./.travis/travis-install.sh
+  - make dependencies
+  - make dev-dependencies
+script: pytest /tests/run_tests.py
+dist: trusty

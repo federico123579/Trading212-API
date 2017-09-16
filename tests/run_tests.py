@@ -1,11 +1,12 @@
+import os
 from tradingAPI import *
 
-
+brow = os.getenv('DRIVER')
 api = API("CRITICAL")
 
 
 def test_launch():
-    assert api.launch()
+    assert api.launch(brow)
 
 
 def test_login():

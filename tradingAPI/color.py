@@ -71,11 +71,11 @@ class printer(object):
 
     @staticmethod
     def error(string=''):
-        return '[' + magenta('=') + '] ' + str(string)
+        return '[' + red('~') + '] ' + str(string)
 
     @staticmethod
     def critical(string=''):
-        return '[' + red('~') + '] ' + str(string)
+        return '[' + bold(red('=')) + '] ' + str(string)
 
     @staticmethod
     def user_input(string=''):
