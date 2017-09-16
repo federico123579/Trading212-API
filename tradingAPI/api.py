@@ -50,7 +50,7 @@ class API(object):
             return number[0]
         except Exception as e:
             logger.error("Number not found")
-            retunr False
+            return False
 
     def launch(self, brow="firefox"):
         '''launch browser and virtual display'''
