@@ -34,11 +34,11 @@ class API(object):
 
     def _css(self, css_path):
         '''css find function abbreviation'''
-        return self.__try(self.browser.find_by_css, args=(css_path))
+        return self.__try(self.browser.find_by_css, args=(css_path,))
 
     def _name(self, name):
         '''name find function abbreviation'''
-        return self.__try(self.browser.find_by_name, args=(name))
+        return self.__try(self.browser.find_by_name, args=(name,))
 
     def _elCss(self, css_path):
         '''check if element is present by css'''
