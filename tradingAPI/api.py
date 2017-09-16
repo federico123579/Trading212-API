@@ -26,10 +26,11 @@ class API(object):
                 return func(*args)
             except Exception as e:
                 exc = e
-                fails += 1
+                fn += 1
                 time.sleep(sleep_t)
-            logger.error(exc)
-            return False
+                if fails < fn:
+                    logger.error(exc)
+                    raise
 
     def _css(self, css_path):
         '''css find function abbreviation'''
