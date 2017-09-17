@@ -6,7 +6,11 @@ api = API("CRITICAL")
 
 
 def test_launch():
-    assert api.launch(brow)
+    if brow == 'firefox':
+        assert api.launch(brow, os.path.join(
+            os.path.expanduser('~'), 'geckodriver', 'geckodriver'))
+    else:
+        assert api.launch(brow)
 
 
 def test_login():

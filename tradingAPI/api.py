@@ -54,7 +54,7 @@ class API(object):
             logger.error("Number not found")
             return False
 
-    def launch(self, brow="firefox"):
+    def launch(self, brow="firefox", exe=None):
         '''launch browser and virtual display'''
         try:
             self.vbro.start()
@@ -63,7 +63,11 @@ class API(object):
             logger.critical("virtual display failed to launch")
             return False
         try:
-            self.browser = Browser(brow, headless=True)
+            if exe is not None:
+                self.browser = Browser(brow, headless=True,
+                                       executable_path=exe)
+            else:
+                self.browser = Browser(brow, headless=True)
             logger.debug(f"browser {brow} launched")
         except Exception as e:
             logger.critical(f"browser {brow} failed to launch")

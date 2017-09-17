@@ -6,16 +6,14 @@ if [ "${DRIVER}" = "firefox" ]; then
     tar -xzf geckodriver-v0.18.0-linux64.tar.gz -C geckodriver
     mv ./geckodriver $HOME
     chmod +x $HOME/geckodriver/geckodriver
-    cp $HOME/geckodriver/geckodriver /usr/bin/geckodriver
 
     curl "https://download.mozilla.org/?product=firefox-latest&lang=en-US&os=linux64" -L > firefox.tbz2
     bzip2 -dc firefox.tbz2 | tar xvf -
     mv ./firefox $HOME
     export PATH=$HOME/firefox:$PATH
     ls -lsa $HOME/geckodriver
-    ls -lsa /usr/bin/
     ls -lsa $HOME/firefox
-    # export PATH=$HOME/geckodriver:$PATH
+    export PATH=$HOME/geckodriver:$PATH
 fi
 
 if [ "${DRIVER}" = "chrome" ]; then
