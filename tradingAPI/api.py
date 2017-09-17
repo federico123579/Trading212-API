@@ -63,7 +63,9 @@ class API(object):
             logger.critical("virtual display failed to launch")
             return False
         try:
-            if exe is not None:
+            if brow == "firefox" and exe is not None:
+                self.browser = Browser(brow, executable_path=exe)
+            elif exe is not None:
                 self.browser = Browser(brow, headless=True,
                                        executable_path=exe)
             else:
