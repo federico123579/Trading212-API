@@ -14,7 +14,7 @@ class API(object):
     '''Interface object'''
 
     def __init__(self, level="debug"):
-        self.movements = MovsList()
+        self.movements = []
         self.stocks = []
         self.vbro = Display()
         logger.setlevel(level)
@@ -373,24 +373,6 @@ class API(object):
             return self._num(val)
         else:
             return False
-
-
-class MovsList(object):
-    def __init__(self):
-        self.movements = []
-
-    def __repr__(self):
-        return self.movements
-
-    def __call__(self, movs):
-        self.movements = list(movs)
-
-    def __iter__(self):
-        for x in self.movements:
-            yield x
-
-    def append(self, mov):
-        self.movements.append(mov)
 
 
 class Movement(object):
