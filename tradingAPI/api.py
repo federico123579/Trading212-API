@@ -49,7 +49,7 @@ class API(object):
         try:
             number = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+",
                                 string.replace(' ', ''))
-            return number[0]
+            return float(number[0])
         except Exception as e:
             logger.error("Number not found")
             return False
@@ -65,6 +65,8 @@ class API(object):
         try:
             if brow == "firefox" and exe is not None:
                 self.browser = Browser(brow, executable_path=exe)
+            elif brow == "firefox":
+                self.browser = Browser(brow)
             elif exe is not None:
                 self.browser = Browser(brow, headless=True,
                                        executable_path=exe)
@@ -287,7 +289,7 @@ class API(object):
         count = 0
         for product in soup.select("div.tradebox"):
             name = product.select("span.instrument-name")[0].text.lower()
-            if [x for x in stocks if name.find(x) != -1]:  # to tidy up
+            if [x for x in stocks if name.find(x.lower()) != -1]:  # to tidy up
                 if not [x for x in self.stocks if x.name == name]:
                     self.stocks.append(Stock(name))
                 stock = [x for x in self.stocks if x.name == name][0]
@@ -309,7 +311,7 @@ class API(object):
                     except Exception as e:
                         logger.warning(e)
                         sent = None
-                    stock.addVar([sell_price, sent])
+                    stock.addVar([float(sell_price), sent])
                     count += 1
         logger.debug(f"added {bold(count)} stocks")
         return True
