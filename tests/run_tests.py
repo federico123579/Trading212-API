@@ -14,12 +14,15 @@ def test_login():
 
 
 def test_movs():
-    api.addMov("usd/euro", 1)
-    api.checkPos()
-    stock = [x.id for x in api.movements if x.name ==
-             "usd/euro" and x.quantity == 1][0]
-    api.closeMov(stock)
-    api.checkPos()
+    try:
+        api.addMov("usd/euro", 1)
+        api.checkPos()
+        stock = [x.id for x in api.movements if x.name ==
+                 "usd/euro" and x.quantity == 1][0]
+        api.closeMov(stock)
+        api.checkPos()
+    except Exception:
+        raise
     assert len([x.id for x in api.movements if x.name ==
                 "ethereum" and x.quantity == 1][0]) == 0
 

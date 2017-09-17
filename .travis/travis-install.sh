@@ -13,6 +13,7 @@ if [ "${DRIVER}" = "firefox" ]; then
     mv ./firefox $HOME
     export PATH=$HOME/firefox:$PATH
     ls -lsa $HOME/geckodriver
+    ls -lsa /usr/bin/
     ls -lsa $HOME/firefox
     # export PATH=$HOME/geckodriver:$PATH
 fi

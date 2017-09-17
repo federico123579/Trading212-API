@@ -63,7 +63,7 @@ class API(object):
             logger.critical("virtual display failed to launch")
             return False
         try:
-            self.browser = Browser(brow)
+            self.browser = Browser(brow, headless=True)
             logger.debug(f"browser {brow} launched")
         except Exception as e:
             logger.critical(f"browser {brow} failed to launch")
@@ -270,7 +270,8 @@ class API(object):
             except Exception as e:
                 logger.error(e)
         logger.debug(f"{len(movs)} positions updated")
-        self.movements(movs)
+        self.movements.clear()
+        self.movements.extend(movs)
         return self.movements
 
     def checkStocks(self, stocks):
