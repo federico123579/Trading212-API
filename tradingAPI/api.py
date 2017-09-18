@@ -201,9 +201,10 @@ class API(object):
                     widget = self.__decode(self._css('div.widget_message'))
                     # in case of errors
                     if widget == 'INSFU':
-                        logger.warning(f"Insufficient funds to buy {product}")
+                        logger.warning(f"Insufficient funds to " +
+                                       f"buy {product} or reached limit")
                         self._css(path['close'])[0].click()
-                        return False
+                        return 'INSFU'
             # and descend
             while self.__get_mov_margin() > auto_quantity:
                 left_arrow.click()
@@ -241,7 +242,7 @@ class API(object):
             f"Added movement of {bold(quantity)} {bold(product)} with " +
             f"limit {bold(stop_limit['value'])} and margin of {margin}")
         time.sleep(1)
-        return True
+        return margin
 
     def closeMov(self, mov_id):
         '''close a position'''
