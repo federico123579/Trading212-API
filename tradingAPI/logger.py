@@ -14,6 +14,7 @@ class logger(object):
 
     def setlevel(level):
         logging.getLogger().setLevel(getattr(logging, level.upper()))
+        logging.getLogger().propagate = False
 
     def debug(s):
         logging.debug(

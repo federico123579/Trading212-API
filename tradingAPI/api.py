@@ -1,19 +1,256 @@
-import time
 import re
+import time
 from bs4 import BeautifulSoup
 from splinter import Browser
 from datetime import datetime
-from .exceptions import *
+from pyvirtualdisplay import Display
 from .logger import logger
 from .color import *
-from .handler import AbstractAPI
+from .exceptions import *
+
+
+class AbstractAPI(object):
+    def __init__(self, level):
+        logger.setlevel(level)
+        self.vbro = Display()
+
+    def __try(self, func, args, fails=3, sleep_t=0.5):
+        fn = 0
+        while fn <= fails:
+            try:
+                return func(*args)
+            except Exception as e:
+                exc = e
+                fn += 1
+                time.sleep(sleep_t)
+                if fails < fn:
+                    logger.error(exc)
+                    raise
+
+    def _css(self, css_path):
+        """css find function abbreviation"""
+        return self.__try(self.browser.find_by_css, args=(css_path,))
+
+    def _name(self, name):
+        """name find function abbreviation"""
+        return self.__try(self.browser.find_by_name, args=(name,))
+
+    def _elCss(self, css_path):
+        """check if element is present by css"""
+        return self.browser.is_element_present_by_css(css_path)
+
+    def _num(self, string):
+        """convert a string to float"""
+        try:
+            number = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+",
+                                string.replace(' ', ''))
+            return float(number[0])
+        except Exception as e:
+            logger.error("Number not found")
+            return False
+
+    def launch(self, brow="firefox", exe=None):
+        """launch browser and virtual display"""
+        try:
+            self.vbro.start()
+            logger.debug("virtual display launched")
+        except Exception:
+            logger.critical("virtual display failed to launch")
+            return False
+        try:
+            if brow == "firefox" and exe is not None:
+                self.browser = Browser(brow, executable_path=exe)
+            elif brow == "firefox":
+                self.browser = Browser(brow)
+            elif exe is not None:
+                self.browser = Browser(brow, headless=True,
+                                       executable_path=exe)
+            else:
+                self.browser = Browser(brow, headless=True)
+            logger.debug(f"browser {brow} launched")
+        except Exception as e:
+            logger.critical(f"browser {brow} failed to launch")
+            logger.critical(e)
+            return False
+        return True
+
+    def login(self, username, password, mode="demo"):
+        """Login function"""
+        url = "https://trading212.com/it/login"
+        try:
+            self.browser.visit(url)
+            logger.debug(f"visiting {url}")
+        except selenium.common.exceptions.WebDriverException:
+            logger.critical("connection timed out")
+            return False
+        try:
+            self._name("login[username]").fill(username)
+            self._name("login[password]").fill(password)
+            self._css(path['log']).click()
+            timeout = time.time() + 30
+            while not self._elCss(path['logo']):
+                if time.time() > timeout:
+                    logger.critical("login failed")
+                    return False
+            time.sleep(1)
+            logger.info(f"logged in as {bold(username)}")
+            # check if it's a weekend
+            if mode == "demo" and datetime.now().isoweekday() in range(6, 8):
+                timeout = time.time() + 10
+                while not self._elCss(path['alert-box']):
+                    if time.time() > timeout:
+                        logger.warning(
+                            "weekend trading alert" +
+                            "box not closed")
+                        break
+                if self._elCss(path['alert-box']):
+                    self._css(path['alert-box'])[0].click()
+            return True
+        except Exception:
+            logger.critical("login failed")
+            raise
+
+    def logout(self):
+        """logout func (quit browser)"""
+        try:
+            self.browser.quit()
+        except Exception:
+            raise BrowserException("browser not started")
+            return False
+        self.vbro.stop()
+        logger.info("Logged out")
+        return True
+
+    def _set_limit(self, mode, value):
+        if not isinstance((), type(value)):
+            value = (value, value)
+        try:
+            self._css(path['limit-gain-' + mode]
+                      )[0].fill(str(value[0]))
+            self._css(path['limit-loss-' + mode]
+                      )[0].fill(str(value[1]))
+        except Exception:
+            logger.error("set_limit failed")
+            raise
+
+    def _decode(self, message):
+        title = message.find_by_css("div.title")[0].text
+        text = message.find_by_css("div.text")[0].text
+        if title == "Insufficient Funds":
+            return 'INSFU'
+        else:
+            return None
+
+    def _decode_n_update(self, message, value, mult=0.1):
+        try:
+            msg_text = message.find_by_css("div.text")[0].text
+            return self._num(msg_text)
+        except Exception:
+            if msg_text.lower().find("higher") != -1:
+                value += value * mult
+                return value
+            else:
+                return self._decode(message)
+
+    def get_bottom_info(self, info):
+        accepted_values = {
+            'free_funds': 'equity-free',
+            'account_value': 'equity-total',
+            'live_result': 'equity-ppl',
+            'used_margin': 'equity-margin'}
+        if accepted_values.get(info):
+            val = self._css("div#" + accepted_values[info] +
+                            " span.equity-item-value")[0].text
+            return self._num(val)
+        else:
+            return False
+
+    def get_mov_margin(self):
+        time.sleep(0.5)
+        try:
+            num = self._num(
+                self._css("span.cfd-order-info-item-value")[0].text)
+            return num
+        except Exception:
+            logger.error("get_mov_margin failed")
+            raise
+
+    def open_mov(self, name):
+        if self._css(path['add-mov'])[0].visible:
+            self._css(path['add-mov'])[0].click()
+        else:
+            self._css('span.dataTable-no-data-action')[0].click()
+        self._css(path['search-box'])[0].fill(name)
+        if not self._elCss(path['first-res']):
+            logger.error("{underline(name)} not found")
+            return False
+            self.close_mov()
+        self._css(path['first-res'])[0].click()
+        return True
+
+    def close_mov(self):
+        try:
+            self._css(path['close'])[0].click()
+        except Exception:
+            raise
+
+    def set_quantity(self, quant):
+        try:
+            self._css(path['quantity'])[0].fill(str(quant))
+            return True
+        except Exception:
+            raise
+
+    def get_price(self, name):
+        soup = BeautifulSoup(
+            self._css("div.scrollable-area-content").html, "html.parser")
+        for product in soup.select("div.tradebox"):
+            fullname = product.select("span.instrument-name")[0].text.lower()
+            if fullname.find(name.lower()) != -1:
+                mark_closed_list = [x for x in product.select(
+                    "div.quantity-list-input-wrapper") if x.select(
+                    "div.placeholder")[0].text.lower().find("close") != -1]
+                if mark_closed_list:
+                    sell_price = product.select("div.tradebox-price-sell")[0]\
+                        .text
+                    return float(sell_price)
+                else:
+                    return False
+
+
+path = {
+    'login-btn': "#login-button",
+    'log': "input.btn-head",
+    'logo': "div.nav_logo",
+    'alert-box': "span.weekend-trading-close",
+    'add-mov': "span.open-dialog-icon.svg-icon-holder",
+    'search-box': "div.searchbox input",
+    'first-res': "div.results.scrollable-holder > div",
+    'sell-btn': "div#orderdialog div.tradebox-button.tradebox-sell",
+    'buy-btn': "div#orderdialog div.tradebox-button.tradebox-buy",
+    'quantity': "div.quantity-slider-input-wrapper > input",
+    'limit-gain-unit': "input#uniqName_1_10",
+    'limit-gain-value': "input#uniqName_1_9",
+    'limit-loss-unit': "input#uniqName_1_14",
+    'limit-loss-value': "input#uniqName_1_13",
+    'confirm-btn': "div.orderdialog-confirm-button",
+    'data-table': "tbody.table-body.dataTable-show-currentprice-arrows",
+    'search-btn': "div.tradepanel-control-bar span",
+    'search-pref': "input.search-input",
+    'all-tools': "div.search-tab",
+    'add-btn': "div.search-results-column div.svg-icon-holder",
+    'plus-icon': "svg.search-plus-icon",
+    'close-prefs': "div.back-button",
+    'close': "span.orderdialog-close",
+    'movs-table': "tbody.dataTable-show-currentprice-arrows",
+}
 
 
 class API(AbstractAPI):
     """Interface object"""
 
     def __init__(self, level="debug"):
-        super().__init__()
+        super().__init__(level)
         self.movements = []
         self.stocks = []
 
@@ -24,8 +261,9 @@ class API(AbstractAPI):
         self._css(path[mode + '-btn'])[0].click()
         # override quantity
         if quantity is not None and auto_quantity is not None:
-            logger.warning("quantity and auto_quantity are exclusive, " +
-                           "overriding quantity")
+            logger.warning(
+                "quantity and auto_quantity are exclusive, " +
+                "overriding quantity")
             quantity = None
         # set quantity
         if quantity is not None:
@@ -43,8 +281,9 @@ class API(AbstractAPI):
                     widget = self._decode(self._css('div.widget_message'))
                     # in case of errors
                     if widget == 'INSFU':
-                        logger.warning(f"Insufficient funds to " +
-                                       f"buy {product} or reached limit")
+                        logger.warning(
+                            f"Insufficient funds to " +
+                            f"buy {product} or reached limit")
                         self.close_mov()
                         return 'INSFU'
             # and descend
@@ -234,31 +473,3 @@ class Stock(object):
     def addVar(self, var):
         """add a variation (list)"""
         self.vars.append(var)
-
-
-path = {
-    'login-btn': "#login-button",
-    'log': "input.btn-head",
-    'logo': "div.nav_logo",
-    'alert-box': "span.weekend-trading-close",
-    'add-mov': "span.open-dialog-icon.svg-icon-holder",
-    'search-box': "div.searchbox input",
-    'first-res': "div.results.scrollable-holder > div",
-    'sell-btn': "div#orderdialog div.tradebox-button.tradebox-sell",
-    'buy-btn': "div#orderdialog div.tradebox-button.tradebox-buy",
-    'quantity': "div.quantity-slider-input-wrapper > input",
-    'limit-gain-unit': "input#uniqName_1_10",
-    'limit-gain-value': "input#uniqName_1_9",
-    'limit-loss-unit': "input#uniqName_1_14",
-    'limit-loss-value': "input#uniqName_1_13",
-    'confirm-btn': "div.orderdialog-confirm-button",
-    'data-table': "tbody.table-body.dataTable-show-currentprice-arrows",
-    'search-btn': "div.tradepanel-control-bar span",
-    'search-pref': "input.search-input",
-    'all-tools': "div.search-tab",
-    'add-btn': "div.search-results-column div.svg-icon-holder",
-    'plus-icon': "svg.search-plus-icon",
-    'close-prefs': "div.back-button",
-    'close': "span.orderdialog-close",
-    'movs-table': "tbody.dataTable-show-currentprice-arrows",
-}
