@@ -1,5 +1,6 @@
 import re
 import time
+import selenium.common.exceptions
 from bs4 import BeautifulSoup
 from splinter import Browser
 from datetime import datetime
@@ -367,11 +368,13 @@ class API(AbstractAPI):
     def checkStocks(self, stocks):
         """check specified stocks (list)"""
         soup = BeautifulSoup(
-            self._css("div.scrollable-area-content").html, "html.parser")
+            self._css("div.scrollable-area-content")[1].html,
+            "html.parser")
         count = 0
         for product in soup.select("div.tradebox"):
             fullname = product.select("span.instrument-name")[0].text.lower()
-            name = [x for x in stocks if fullname.find(x.lower()) != -1]
+            name = [x for x in stocks
+                    if fullname.lower().find(x.lower()) != -1]
             if name:
                 if not [x for x in self.stocks if x.name == name]:
                     self.stocks.append(Stock(name))
