@@ -130,10 +130,10 @@ class AbstractAPI(object):
         if not isinstance((), type(value)):
             value = (value, value)
         try:
-            self._css(path['limit-gain-' + mode]
-                      )[0].fill(str(value[0]))
-            self._css(path['limit-loss-' + mode]
-                      )[0].fill(str(value[1]))
+            self._xpath(path['limit-gain-' + mode]
+                        )[0].fill(str(value[0]))
+            self._xpath(path['limit-loss-' + mode]
+                        )[0].fill(str(value[1]))
         except Exception:
             logger.error("set_limit failed")
             raise
@@ -234,10 +234,14 @@ path = {
     'sell-btn': "div#orderdialog div.tradebox-button.tradebox-sell",
     'buy-btn': "div#orderdialog div.tradebox-button.tradebox-buy",
     'quantity': "div.quantity-slider-input-wrapper > input",
-    'limit-gain-unit': "input#uniqName_1_10",
-    'limit-gain-value': "input#uniqName_1_9",
-    'limit-loss-unit': "input#uniqName_1_14",
-    'limit-loss-value': "input#uniqName_1_13",
+    'limit-gain-unit':
+        '//*[@id="smartorder"]/div[1]/div[3]/div/div[3]/div[1]/div[5]/input',
+    'limit-gain-value':
+        '//*[@id="smartorder"]/div[1]/div[3]/div/div[3]/div[1]/div[6]/input',
+    'limit-loss-unit':
+        '//*[@id="smartorder"]/div[1]/div[3]/div/div[3]/div[3]/div[5]/input',
+    'limit-loss-value':
+        '//*[@id="smartorder"]/div[1]/div[3]/div/div[3]/div[3]/div[6]/input',
     'confirm-btn': "div.orderdialog-confirm-button",
     'data-table': "tbody.table-body.dataTable-show-currentprice-arrows",
     'search-btn': "div.tradepanel-control-bar span",
@@ -327,7 +331,6 @@ class API(AbstractAPI):
         logger.info(
             f"Added movement of {bold(quantity)} {bold(product)} with " +
             f"limit {bold(stop_limit['value'])} and margin of {margin}")
-        logger.debug(f"margin: {margin} - {type(margin)}")
         return margin
 
     def closeMov(self, mov_id):
