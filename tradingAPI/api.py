@@ -36,6 +36,10 @@ class AbstractAPI(object):
         """name find function abbreviation"""
         return self.__try(self.browser.find_by_name, args=(name,))
 
+    def _xpath(self, xpath):
+        """xpath find function abbreviation"""
+        return self.__try(self.browser.find_by_xpath, args=(xpath,))
+
     def _elCss(self, css_path):
         """check if element is present by css"""
         return self.browser.is_element_present_by_css(css_path)
@@ -367,8 +371,9 @@ class API(AbstractAPI):
 
     def checkStocks(self, stocks):
         """check specified stocks (list)"""
+
         soup = BeautifulSoup(
-            self._css("div.scrollable-area-content")[13].html,
+            self._xpath('//*[@id="tradePanel"]/div[5]/div[3]/div')[0].html,
             "html.parser")
         count = 0
         for product in soup.select("div.tradebox"):
