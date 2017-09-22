@@ -368,7 +368,7 @@ class API(AbstractAPI):
     def checkStocks(self, stocks):
         """check specified stocks (list)"""
         soup = BeautifulSoup(
-            self._css("div.scrollable-area-content")[1].html,
+            self._css("div.scrollable-area-content")[13].html,
             "html.parser")
         count = 0
         for product in soup.select("div.tradebox"):
@@ -376,6 +376,7 @@ class API(AbstractAPI):
             name = [x for x in stocks
                     if fullname.lower().find(x.lower()) != -1]
             if name:
+                name = name[0]
                 if not [x for x in self.stocks if x.name == name]:
                     self.stocks.append(Stock(name))
                 stock = [x for x in self.stocks if x.name == name][0]
