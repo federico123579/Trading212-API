@@ -44,6 +44,10 @@ class AbstractAPI(object):
         """check if element is present by css"""
         return self.browser.is_element_present_by_css(css_path)
 
+    def _elXpath(self, xpath):
+        """check if element is present by css"""
+        return self.browser.is_element_present_by_xpath(xpath)
+
     def _num(self, string):
         """convert a string to float"""
         try:
@@ -51,7 +55,7 @@ class AbstractAPI(object):
                                 string.replace(' ', ''))
             return float(number[0])
         except Exception as e:
-            logger.error("Number not found")
+            logger.error(f"Number not found in '{string}' ")
             return False
 
     def launch(self, brow="firefox", exe=None):
@@ -171,7 +175,7 @@ class AbstractAPI(object):
             return False
 
     def get_mov_margin(self):
-        time.sleep(0.5)
+        time.sleep(0.8)
         try:
             num = self._num(
                 self._css("span.cfd-order-info-item-value")[0].text)
@@ -180,17 +184,60 @@ class AbstractAPI(object):
             logger.error("get_mov_margin failed")
             raise
 
-    def open_mov(self, name):
+    def _check_name(self, name, string, counter=None):
+        """if both in string return False"""
+        name = name.lower()
+        string = string.lower()
+        if counter is None:
+            if name in string:
+                return True
+            else:
+                return False
+        counter = counter.lower()
+        if name in string and counter in string:
+            logger.debug("check_name: counter found in string")
+            return False
+        elif name in string and counter not in string:
+            return True
+        else:
+            return False
+
+    def _get_result(self, pos):
+        """get pos result, where 0 is first"""
+        eval_xpath = path['res'] + f"[{pos + 1}]"
+        if not self._elXpath(eval_xpath):
+            raise IndexError("pos not found")
+        else:
+            return self._xpath(eval_xpath)[0]
+
+    def _get_res_name(self, res):
+        """return result name"""
+        return res.find_by_css("span.instrument-name").text
+
+    def search_res(self, res, check_counter=None):
+        """search for a res"""
+        result = self._get_result(0)
+        x = 0
+        while not self._check_name(res, self._get_res_name(result),
+                                   counter=check_counter):
+            name = self._get_res_name(self._get_result(x))
+            logger.debug(name)
+            if self._check_name(res, name, counter=check_counter):
+                return self._get_result(x)
+            x += 1
+        return result
+
+    def open_mov(self, name, name_counter=None):
         if self._css(path['add-mov'])[0].visible:
             self._css(path['add-mov'])[0].click()
         else:
             self._css('span.dataTable-no-data-action')[0].click()
         self._css(path['search-box'])[0].fill(name)
-        if not self._elCss(path['first-res']):
+        if not self._get_result(0):
             logger.error("{underline(name)} not found")
             return False
             self.close_mov()
-        self._css(path['first-res'])[0].click()
+        self.search_res(name, check_counter=name_counter).click()
         return True
 
     def close_mov(self):
@@ -230,7 +277,8 @@ path = {
     'alert-box': "span.weekend-trading-close",
     'add-mov': "span.open-dialog-icon.svg-icon-holder",
     'search-box': "div.searchbox input",
-    'first-res': "div.results.scrollable-holder > div",
+    'res':
+        '//*[@id="list-results-instruments"]/div/div[3]/div/div/div',
     'sell-btn': "div#orderdialog div.tradebox-button.tradebox-sell",
     'buy-btn': "div#orderdialog div.tradebox-button.tradebox-buy",
     'quantity': "div.quantity-slider-input-wrapper > input",
@@ -264,9 +312,9 @@ class API(AbstractAPI):
         self.stocks = []
 
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
-               auto_quantity=None):
+               auto_quantity=None, name_counter=None):
         """Add movement function"""
-        self.open_mov(product)
+        self.open_mov(product, name_counter=name_counter)
         self._css(path[mode + '-btn'])[0].click()
         # override quantity
         if quantity is not None and auto_quantity is not None:
@@ -324,10 +372,13 @@ class API(AbstractAPI):
             except Exception as e:
                 logger.error(e)
                 self.close_mov()
+                raise
                 return False
         else:
             stop_limit['value'] = None
             self._css(path['confirm-btn'])[0].click()
+        while self._elCss(path['confirm-btn']):
+            time.sleep(0.1)
         logger.info(
             f"Added movement of {bold(quantity)} {bold(product)} with " +
             f"limit {bold(stop_limit['value'])} and margin of {margin}")
