@@ -377,8 +377,6 @@ class API(AbstractAPI):
         else:
             stop_limit['value'] = None
             self._css(path['confirm-btn'])[0].click()
-        while self._elCss(path['confirm-btn']):
-            time.sleep(0.1)
         logger.info(
             f"Added movement of {bold(quantity)} {bold(product)} with " +
             f"limit {bold(stop_limit['value'])} and margin of {margin}")
