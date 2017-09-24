@@ -15,7 +15,7 @@ class AbstractAPI(object):
         logger.setlevel(level)
         self.vbro = Display()
 
-    def __try(self, func, args, fails=3, sleep_t=0.5):
+    def __try(self, func, args, fails=7, sleep_t=0.5):
         fn = 0
         while fn <= fails:
             try:
