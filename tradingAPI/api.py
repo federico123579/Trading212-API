@@ -51,8 +51,8 @@ class AbstractAPI(object):
     def _num(self, string):
         """convert a string to float"""
         try:
-            number = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+",
-                                string.replace(' ', ''))
+            string = re.sub('[^a-zA-Z0-9\n\.]', '', string)
+            number = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+", string)
             return float(number[0])
         except Exception as e:
             logger.error(f"Number not found in '{string}' ")
@@ -299,7 +299,7 @@ path = {
     'plus-icon': "svg.search-plus-icon",
     'close-prefs': "div.back-button",
     'close': "span.orderdialog-close",
-    'movs-table': "tbody.dataTable-show-currentprice-arrows",
+    'movs-table': "div#accountPanel .table-body",
 }
 
 
@@ -399,7 +399,7 @@ class API(AbstractAPI):
     def checkPos(self):
         """check all current positions"""
         soup = BeautifulSoup(
-            self._css(path['movs-table']).html,
+            self._css(path['movs-table'])[0].html,
             "html.parser")
         movs = []
         for x in soup.find_all("tr"):
@@ -407,8 +407,8 @@ class API(AbstractAPI):
                 prod_id = x['id']
                 product = x.select("td.name")[0].text
                 quant = x.select("td.quantity")[0].text
-                if "direction-label-buy" in soup.find_all("tr")[0] \
-                        .select("td.direction")[0].span['class']:
+                if ("direction-label-buy" in soup.find_all("tr")[0]
+                        .select("td.direction")[0].span['class']):
                     mode = "long"
                 else:
                     mode = "short"
