@@ -217,6 +217,7 @@ class AbstractAPI(object):
     def search_res(self, res, check_counter=None):
         """search for a res"""
         result = self._get_result(0)
+        name = self._get_res_name(self._get_result(0))
         x = 0
         while not self._check_name(res, self._get_res_name(result),
                                    counter=check_counter):
@@ -225,7 +226,7 @@ class AbstractAPI(object):
             if self._check_name(res, name, counter=check_counter):
                 return self._get_result(x)
             x += 1
-        return result
+        return result, name
 
     def open_mov(self, name, name_counter=None):
         if self._css(path['add-mov'])[0].visible:
@@ -237,8 +238,15 @@ class AbstractAPI(object):
             logger.error("{underline(name)} not found")
             return False
             self.close_mov()
-        self.search_res(name, check_counter=name_counter).click()
-        return True
+        result, name = self.search_res(name, check_counter=name_counter)
+        result.click()
+        if self._elCss("div.widget_message"):
+            if (self._css("div.widget_message div.title")
+                    [0].text == "Insufficient Funds"):
+                return "INSFU"
+            else:
+                return False
+        return name
 
     def close_mov(self):
         try:
@@ -314,7 +322,13 @@ class API(AbstractAPI):
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
                auto_quantity=None, name_counter=None):
         """Add movement function"""
-        self.open_mov(product, name_counter=name_counter)
+        name = self.open_mov(product, name_counter=name_counter)
+        if name == "INSFU":
+            logger.warning(
+                f"Insufficient funds to " +
+                f"buy {name} or reached limit")
+            self.close_mov()
+            return 'INSFU'
         self._css(path[mode + '-btn'])[0].click()
         # override quantity
         if quantity is not None and auto_quantity is not None:
@@ -340,7 +354,7 @@ class API(AbstractAPI):
                     if widget == 'INSFU':
                         logger.warning(
                             f"Insufficient funds to " +
-                            f"buy {product} or reached limit")
+                            f"buy {name} or reached limit")
                         self.close_mov()
                         return 'INSFU'
             # and descend
@@ -350,7 +364,7 @@ class API(AbstractAPI):
                 quantity = self._css(path['quantity'])[0].value
                 if not quantity:
                     logger.warning(
-                        f"Failed to add movement of {product} " +
+                        f"Failed to add movement of {name} " +
                         "cause of margin too high")
                     self.close_mov()
                     return False
@@ -380,9 +394,9 @@ class API(AbstractAPI):
         while self._elCss(path['confirm-btn']):
             time.sleep(0.1)
         logger.info(
-            f"Added movement of {bold(quantity)} {bold(product)} with " +
+            f"Added movement of {bold(quantity)} {bold(name)} with " +
             f"limit {bold(stop_limit['value'])} and margin of {margin}")
-        return margin
+        return {'margin': margin, 'name': name}
 
     def closeMov(self, mov_id):
         """close a position"""
@@ -406,15 +420,18 @@ class API(AbstractAPI):
             try:
                 prod_id = x['id']
                 product = x.select("td.name")[0].text
-                quant = x.select("td.quantity")[0].text
+                quant = self._num(x.select("td.quantity")[0].text)
                 if ("direction-label-buy" in soup.find_all("tr")[0]
                         .select("td.direction")[0].span['class']):
                     mode = "long"
                 else:
                     mode = "short"
                 price = self._num(x.select("td.averagePrice")[0].text)
+                curr = self._num(x.select("td.currentPrice")[0]
+                                 .select("span.price-info")[0].text)
                 earn = self._num(x.select("td.ppl")[0].text)
-                mov = Movement(prod_id, product, quant, mode, price, earn)
+                mov = Movement(prod_id, product, quant, mode,
+                               price, curr, earn)
                 movs.append(mov)
             except Exception as e:
                 logger.error(e)
@@ -518,12 +535,13 @@ class API(AbstractAPI):
 
 
 class Movement(object):
-    def __init__(self, prod_id, product, quantity, mode, price, earn):
+    def __init__(self, prod_id, product, quantity, mode, price, curr, earn):
         self.id = prod_id
         self.product = product
         self.quantity = quantity
         self.mode = mode
         self.price = price
+        self.curr = curr
         self.earn = earn
 
 
