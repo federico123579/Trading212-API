@@ -55,7 +55,6 @@ class AbstractAPI(object):
             number = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+", string)
             return float(number[0])
         except Exception as e:
-            logger.error(f"Number not found in '{string}' ")
             return False
 
     def launch(self, brow="firefox", exe=None):
@@ -395,7 +394,9 @@ class API(AbstractAPI):
             time.sleep(0.1)
         logger.info(
             f"Added movement of {bold(quantity)} {bold(name)} with " +
-            f"limit {bold(stop_limit['value'])} and margin of {margin}")
+            f"limit {round(stop_limit['value'][0], 8)}, " +
+            f"{round(stop_limit['value'][1], 8)} " +
+            f" and margin of {margin}")
         return {'margin': margin, 'name': name}
 
     def closeMov(self, mov_id):
