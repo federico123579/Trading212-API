@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="trading212api",
-    version="v0.1b5",
+    version="v0.1rc1",
     packages=['tradingAPI'],
     install_requires=[
         'splinter',
@@ -23,8 +23,6 @@ setup(
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Topic :: Software Development :: User Interfaces',
         'Topic :: System :: Emulators'

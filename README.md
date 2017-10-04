@@ -1,12 +1,9 @@
-<p align="center">
-    <img src="./docs/logo.png">
-</p>
-
+Trading API
 > API for Trading212 broker service
 
-[![Build Status](https://travis-ci.org/federico123579/Trading212-API.svg?branch=master)](https://travis-ci.org/federico123579/Trading212-API) [![Coverage Status](https://coveralls.io/repos/github/federico123579/Trading212-API/badge.svg?branch=master)](https://coveralls.io/github/federico123579/Trading212-API?branch=master) [![Code Climate](https://img.shields.io/codeclimate/github/federico123579/Trading212-API.svg)](https://codeclimate.com/github/federico123579/Trading212-API) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api)
+[![Code Climate](https://img.shields.io/codeclimate/github/federico123579/Trading212-API.svg)](https://codeclimate.com/github/federico123579/Trading212-API) [![PyPI](https://img.shields.io/pypi/v/trading212api.svg)](https://pypi.python.org/pypi/trading212api)
 
-A python user-interface for Trading 212 using browser automation.
+A python based API for Trading 212 using selenium browser automation.
 
 ## Installing / Getting started
 
@@ -14,10 +11,10 @@ To install the API, just install it with pip.
 
 ```shell
 pip install trading212api
-python trading212api
 ```
 
 ## Developing
+see [contribute](docs/CONTRIBUTE.md) to participate.
 
 ### Built With
 
@@ -32,7 +29,7 @@ Built with *splinter* for a better browser automation.
 ### Prerequisites
 
 The dependencies for dev instances are:
-- splinter _v.0.7.6_
+- Python3.6
 - geckodriver _(for Firefox)_
 - chromedrive _(for Chrome)_
 
@@ -77,12 +74,6 @@ The Semantic Versioning is used in this repository in this format:
 * **status** show the status (alpha, beta, rc, etc.)
 
 for more information see [Semantic Versioning](http://semver.org/)
-
-## Configuration
-
-As soon the program is launched it requires some user data:
-- username
-- password
 
 ## Api Reference
 

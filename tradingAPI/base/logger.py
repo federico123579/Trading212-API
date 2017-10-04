@@ -10,7 +10,6 @@ from .color import *
 class logger(object):
     logging.config.fileConfig(
         path.join(path.dirname(__file__), 'logging.conf'))
-    logging.getLogger().setLevel(getattr(logging, 'DEBUG'))
 
     def setlevel(level):
         logging.getLogger().setLevel(getattr(logging, level.upper()))
