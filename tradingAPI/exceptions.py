@@ -1,4 +1,6 @@
-from .base.logger import logger
+# logging
+import logging
+logger = logging.getLogger('tradingAPI.exceptions')
 
 
 class BaseExc(BaseException):
@@ -28,5 +30,5 @@ class CredentialsException(Exception):
     """credential exception"""
     def __init__(self, username):
         err = "wrong credentials for {username}"
-        logger.critical(err)
+        logger.error(err)
         super().__init__(err)

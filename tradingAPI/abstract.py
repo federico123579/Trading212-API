@@ -1,10 +1,16 @@
 import time
-from abc import ABCMeta
+import selenium.common.exceptions
+import re
+from datetime import datetime
 from pyvirtualdisplay import Display
 from bs4 import BeautifulSoup
-import tradingAPI.exceptions
-from .base.logger import logger
+from splinter import Browser
+from tradingAPI import exceptions
 from .links import path
+
+# logging
+import logging
+logger = logging.getLogger('tradingAPI')
 
 
 def expect(func, args, times=7, sleep_t=0.5):
@@ -12,24 +18,26 @@ def expect(func, args, times=7, sleep_t=0.5):
     while times > 0:
         try:
             return func(*args)
-    except Exception as e:
+        except Exception as e:
             times -= 1
             time.sleep(sleep_t)
             if times == 0:
                 raise exceptions.BaseExc(e)
 
 
-def num(self, string):
+def num(string):
     """convert a string to float"""
     try:
         string = re.sub('[^a-zA-Z0-9\n\.]', '', string)
         number = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+", string)
         return float(number[0])
     except Exception as e:
+        logger = logging.getLogger('tradingAPI.num')
+        logger.debug("number not found in %s" % string)
         return None
 
 
-class AbstractAPI(object, metaclass=ABCMeta):
+class AbstractAPI(object):
     def __init__(self, brow="firefox"):
         self.brow_name = brow
         # init virtual Display
@@ -43,49 +51,63 @@ class AbstractAPI(object, metaclass=ABCMeta):
         except Exception:
             raise exceptions.VBroException()
         try:
-            self.browser = Browser(self.brow_name, headless=True)
+            self.browser = Browser(self.brow_name)
             logger.debug(f"browser {self.brow_name} launched")
         except Exception:
             raise exceptions.BrowserException(
                 self.brow_name, "failed to launch")
+        return True
 
-    def css(self, css_path, dom=self.browser):
+    def css(self, css_path, dom=None):
         """css find function abbreviation"""
+        if dom is None:
+            dom = self.browser
         return expect(dom.find_by_css, args=[css_path])
 
-    def css1(self, css_path, dom=self.browser):
+    def css1(self, css_path, dom=None):
         """return the first value of self.css"""
+        if dom is None:
+            dom = self.browser
         return self.css(css_path, dom)[0]
 
-    def search_name(self, name, dom=self.browser):
+    def search_name(self, name, dom=None):
         """name find function abbreviation"""
+        if dom is None:
+            dom = self.browser
         return expect(dom.find_by_name, args=[name])
 
-    def xpath(self, xpath, dom=self.browser):
+    def xpath(self, xpath, dom=None):
         """xpath find function abbreviation"""
+        if dom is None:
+            dom = self.browser
         return expect(dom.find_by_xpath, args=[xpath])
 
-    def elCss(self, css_path, dom=self.browser):
+    def elCss(self, css_path, dom=None):
         """check if element is present by css"""
+        if dom is None:
+            dom = self.browser
         return expect(dom.is_element_present_by_css, args=[css_path])
 
-    def elXpath(self, xpath, dom=self.browser):
+    def elXpath(self, xpath, dom=None):
         """check if element is present by css"""
+        if dom is None:
+            dom = self.browser
         return expect(dom.is_element_present_by_xpath, args=[xpath])
 
     def login(self, username, password, mode="demo"):
         """login function"""
         url = "https://trading212.com/it/login"
         try:
+            logger.debug(f"visiting %s" % url)
             self.browser.visit(url)
-            logger.debug(f"visiting {url}")
+            logger.debug(f"connected to %s" % url)
         except selenium.common.exceptions.WebDriverException:
             logger.critical("connection timed out")
             raise
         try:
             self.search_name("login[username]").fill(username)
             self.search_name("login[password]").fill(password)
-            self.css(path['log']).click()
+            self.css1(path['log']).click()
             # define a timeout for logging in
             timeout = time.time() + 30
             while not self.elCss(path['logo']):
@@ -136,7 +158,7 @@ class AbstractAPI(object, metaclass=ABCMeta):
 
     def get_price(self, name):
         soup = BeautifulSoup(
-            self.css("div.scrollable-area-content").html, "html.parser")
+            self.css("div.scrollable-area-content")[1].html, "html.parser")
         for product in soup.select("div.tradebox"):
             fullname = product.select("span.instrument-name")[0].text.lower()
             if fullname.find(name.lower()) != -1:
@@ -152,22 +174,23 @@ class AbstractAPI(object, metaclass=ABCMeta):
 
     class MovementWindow(object):
         """add movement window"""
-        def __init__(self, api):
+        def __init__(self, api, name):
             self.api = api
+            self.name = name
             self.insfu = False
 
-        def open(self, prod_name, name_counter=None):
+        def open(self, name_counter=None):
             """open the window"""
             if self.api.css1(path['add-mov']).visible:
                 self.api.css1(path['add-mov']).click()
             else:
                 self.api.css1('span.dataTable-no-data-action').click()
-            self.api.css1(path['search-box']).fill(prod_name)
+            self.api.css1(path['search-box']).fill(self.name)
             if self.get_result(0) is None:
-                logger.error("%s not found" % prod_name)
+                logger.error("%s not found" % self.name)
                 self.close_mov()
-                raise ValueError('%s not found in mov list' % prod_name)
-            result, name = self.search_res(prod_name, name_counter)
+                raise ValueError('%s not found in mov list' % self.name)
+            result, name = self.search_res(self.name, name_counter)
             result.click()
             if self.elCss("div.widget_message"):
                 self.decode(self.api.css1("div.widget_message"))
@@ -257,3 +280,6 @@ class AbstractAPI(object, metaclass=ABCMeta):
             """set quantity"""
             self.css(path['quantity'])[0].fill(str(quant))
             self.quantity = quant
+
+    def new_mov(self, name):
+        return self.MovementWindow(self, name)

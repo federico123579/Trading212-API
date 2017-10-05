@@ -3,14 +3,14 @@ from setuptools import setup, find_packages
 setup(
     name="trading212api",
     version="v0.1rc1",
-    packages=['tradingAPI'],
+    packages=find_packages(),
     install_requires=[
         'splinter',
         'pyvirtualdisplay',
         'bs4'
     ],
     include_package_data=True,
-    package_data={'': ['*.conf']},
+    package_data={'': ['*.ini', 'logs/*.ini']},
     zip_safe=False,
     author="Federico Lolli",
     author_email="federico123579@gmail.com",
