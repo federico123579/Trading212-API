@@ -37,15 +37,15 @@ def num(string):
         return None
 
 
-class AbstractAPI(object):
+class LowLevelAPI(object):
     def __init__(self, brow="firefox"):
         self.brow_name = brow
-        # init virtual Display
-        self.vbro = Display()
 
     def launch(self):
         """launch browser and virtual display"""
         try:
+            # init virtual Display
+            self.vbro = Display()
             self.vbro.start()
             logger.debug("virtual display launched")
         except Exception:
@@ -158,7 +158,7 @@ class AbstractAPI(object):
 
     def get_price(self, name):
         soup = BeautifulSoup(
-            self.css("div.scrollable-area-content")[1].html, "html.parser")
+            self.css1("div.scrollable-area-content").html, "html.parser")
         for product in soup.select("div.tradebox"):
             fullname = product.select("span.instrument-name")[0].text.lower()
             if fullname.find(name.lower()) != -1:
@@ -177,6 +177,7 @@ class AbstractAPI(object):
         def __init__(self, api, name):
             self.api = api
             self.name = name
+            self.state = 'open'
             self.insfu = False
 
         def open(self, name_counter=None):
@@ -192,13 +193,26 @@ class AbstractAPI(object):
                 raise ValueError('%s not found in mov list' % self.name)
             result, name = self.search_res(self.name, name_counter)
             result.click()
-            if self.elCss("div.widget_message"):
+            if self.api.elCss("div.widget_message"):
                 self.decode(self.api.css1("div.widget_message"))
             self.name = name
+            logger.debug("opened window")
 
         def close(self):
             """close a movement"""
             self.api.css1(path['close']).click()
+            self.state = 'closed'
+            logger.debug("closed window")
+
+        def confirm(self):
+            """confirm the movement"""
+            self.api.css1(path['confirm-btn']).click()
+            widg = self.api.css("div.widget_message")
+            if widg:
+                self.decode(widg[0])
+                raise exceptions.WidgetException(widg)
+            self.state = 'conclused'
+            logger.debug("confirmed movement")
 
         def search_res(self, res, check_counter=None):
             """search for a res"""
@@ -243,14 +257,31 @@ class AbstractAPI(object):
             except Exception:
                 return None
 
-        def set_limit(self, mode, value):
+        def set_limit(self, category, mode, value):
             """set limit in movement window"""
-            if not isinstance((), type(value)):
-                value = (value, value)
-            if mode not in ["buy", "sell"]:
+            if (mode not in ["unit", "value"] or category
+                    not in ["gain", "loss", "both"]):
                 raise ValueError()
-            self.xpath(path['limit-gain-' + mode])[0].fill(str(value[0]))
-            self.xpath(path['limit-loss-' + mode])[0].fill(str(value[1]))
+            if not hasattr(self, 'stop_limit'):
+                self.stop_limit = {'gain': {}, 'loss': {}}
+                logger.debug("initialized stop_limit")
+            if category == 'gain':
+                self.api.xpath(
+                    path['limit-gain-%s' % mode])[0].fill(str(value))
+            elif category == 'loss':
+                self.api.xpath(
+                    path['limit-loss-%s' % mode])[0].fill(str(value))
+            self.stop_limit[category]['mode'] = mode
+            self.stop_limit[category]['value'] = value
+            if category == 'both':
+                self.api.xpath(
+                    path['limit-gain-%s' % mode])[0].fill(str(value))
+                self.api.xpath(
+                    path['limit-loss-%s' % mode])[0].fill(str(value))
+                for cat in ['gain', 'loss']:
+                    self.stop_limit[cat]['mode'] = mode
+                    self.stop_limit[cat]['value'] = value
+            logger.debug("set limit")
 
         def decode(self, message):
             """decode text pop-up"""
@@ -258,6 +289,7 @@ class AbstractAPI(object):
             text = self.api.css1("div.text", message).text
             if title == "Insufficient Funds":
                 self.insfu = True
+            logger.debug("decoded message")
 
         def decode_update(self, message, value, mult=0.1):
             """decode and update the value"""
@@ -274,12 +306,27 @@ class AbstractAPI(object):
 
         def get_mov_margin(self):
             """get the margin of the movement"""
-            return num(self.css1("span.cfd-order-info-item-value").text)
+            return num(self.api.css1("span.cfd-order-info-item-value").text)
+
+        def set_mode(self, mode):
+            """set mode (buy or sell)"""
+            if mode not in ["buy", "sell"]:
+                raise ValueError()
+            self.api.css1(path[mode + '-btn']).click()
+            self.mode = mode
+            logger.debug("mode set")
+
+        def get_quantity(self):
+            """gte current quantity"""
+            quant = int(num(self.api.css1(path['quantity']).value))
+            self.quantity = quant
+            return quant
 
         def set_quantity(self, quant):
             """set quantity"""
-            self.css(path['quantity'])[0].fill(str(quant))
+            self.api.css1(path['quantity']).fill(str(quant))
             self.quantity = quant
+            logger.debug("quantity set")
 
     def new_mov(self, name):
         return self.MovementWindow(self, name)

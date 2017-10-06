@@ -1,5 +1,5 @@
 # from tradingAPI.api import API
-from tradingAPI.abstract import AbstractAPI
+from tradingAPI.low_level import LowLevelAPI
 import os.path
 import logging
 import logging.config
@@ -11,7 +11,7 @@ logging.config.dictConfig({
     'formatters': {
         'deafult': {
             'format':
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                '%(asctime)s - %(levelname)s - %(name)s - %(message)s',
             'datefmt': '%Y-%m-%d %H:%M:%S'
         },
         'mov_form': {
@@ -49,7 +49,7 @@ logging.config.dictConfig({
         },
         'tradingAPI': {
             'handlers': ['rotating'],
-            'level': 'INFO'
+            'level': 'DEBUG'
         },
         'mover': {
             'handlers': ['movs_handler'],

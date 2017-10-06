@@ -1,3 +1,5 @@
+from bs4 import BeautifulSoup
+
 # logging
 import logging
 logger = logging.getLogger('tradingAPI.exceptions')
@@ -30,5 +32,14 @@ class CredentialsException(Exception):
     """credential exception"""
     def __init__(self, username):
         err = "wrong credentials for {username}"
+        logger.error(err)
+        super().__init__(err)
+
+
+class WidgetException(Exception):
+    """in case of pop-up"""
+    def __init__(self, message):
+        soup = BeautifulSoup(message.html, 'html.parser')
+        err = soup.select("div.text")[0].text
         logger.error(err)
         super().__init__(err)
