@@ -13,11 +13,11 @@ from datetime import datetime
 from pyvirtualdisplay import Display
 from bs4 import BeautifulSoup
 from splinter import Browser
-from tradingAPI import exceptions
 from .glob import Glob
 from .links import path
 from .utils import num, expect, get_pip
 # exceptions
+from tradingAPI import exceptions
 import selenium.common.exceptions
 
 # logging
@@ -291,6 +291,8 @@ class LowLevelAPI(object):
             text = self.api.css1("div.text", message).text
             if title == "Insufficient Funds":
                 self.insfu = True
+            elif title == "Maximum Quantity Limit":
+                raise exceptions.MaxQuantLimit(num(text))
             logger.debug("decoded message")
 
         def decode_update(self, message, value, mult=0.1):

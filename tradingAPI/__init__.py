@@ -26,6 +26,7 @@ logging.config.dictConfig({
         },
         'rotating': {
             'class': 'logging.handlers.TimedRotatingFileHandler',
+            'level': 'DEBUG'
             'formatter': 'deafult',
             'filename': os.path.join(
                 os.path.dirname(__file__), 'logs/logfile.log'),
@@ -48,11 +49,11 @@ logging.config.dictConfig({
             'propagate': True
         },
         'tradingAPI': {
-            'handlers': ['rotating'],
+            'handlers': ['rotating', 'console'],
             'level': 'DEBUG'
         },
         'mover': {
-            'handlers': ['movs_handler'],
+            'handlers': ['movs_handler', 'console'],
             'level': 'INFO'
         }
     }

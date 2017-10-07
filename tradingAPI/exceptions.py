@@ -39,7 +39,7 @@ class WindowException(Exception):
 class CredentialsException(Exception):
     """credential exception"""
     def __init__(self, username):
-        err = "wrong credentials for {username}"
+        err = "wrong credentials for %s" % username
         logger.error(err)
         super().__init__(err)
 
@@ -51,3 +51,11 @@ class WidgetException(Exception):
         err = soup.select("div.text")[0].text
         logger.error(err)
         super().__init__(err)
+
+
+class MaxQuantLimit(Exception):
+    """in case of maximum quantity exceeding"""
+    def __init__(self, quant):
+        self.quant = quant
+        self.err = "max quantity reached, need to be below %d" % quant
+        super().__init__(self.err)

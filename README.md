@@ -58,9 +58,9 @@ docker run --name tradingapi_instance -it tradingapi
 
 ### To-do
 
+- [X] add exceptions and optimize logger
 - [ ] add real account login
 - [ ] fix test.py
-- [ ] add exceptions and optimize logger
 
 ## Versioning
 

@@ -3,6 +3,8 @@ from .low_level import LowLevelAPI
 # logging
 import logging
 logger = logging.getLogger('tradingAPI')
+mov_logger = logging.getLogger('mover')
+
 
 class API(LowLevelAPI):
     """Interface object"""
@@ -11,18 +13,19 @@ class API(LowLevelAPI):
 
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
                auto_margin=None, name_counter=None):
-        """main function for placing movements"""
+        """main function for placing movements
+        stop_limit = {'gain': [mode, value], 'loss': [mode, value]}"""
         # ~ ARGS ~
         if (not isinstance(product, type('')) and
                 not isinstance(name_counter, type(''))):
-            raise ValueError(str())
+            raise ValueError('product and name_counter have to be a string')
+        if not isinstance(stop_limit, type({})):
+            raise ValueError('has to be a dictionary')
         # exclusive args
         if quantity is not None and auto_margin is not None:
-            logger.error("quantity and auto_margin are exclusive")
-            raise ValueError()
+            raise ValueError("quantity and auto_margin are exclusive")
         elif quantity is None and auto_margin is None:
-            logger.error("need at least one quantity")
-            raise ValueError()
+            raise ValueError("need at least one quantity")
         # ~ MAIN ~
         # open new window
         mov = self.new_mov(product)
@@ -30,74 +33,45 @@ class API(LowLevelAPI):
         # set quantity
         if quantity is not None:
             mov.set_quantity(quantity)
-        # auto_margin calculate quantity
-        # FROM HERE -----~~~
+            # for best performance in long times
+            margin = mov.get_unit_value() * quant
+        # auto_margin calculate quantity (how simple!)
+        elif auto_margin is not None:
+            unit_value = mov.get_unit_value()
+            mov.set_quantity(auto_margin * unit_value)
+            margin = auto_margin
+        # stop limit (how can be so simple!)
+        if stop_limit is not None:
+            mov.set_limit('gain', stop_limit['gain'][0], stop_limit['gain'][1])
+            mov.set_limit('loss', stop_limit['loss'][0], stop_limit['loss'][1])
+        # confirm
+        try:
+            mov.confirm()
+        except MaxQuantLimit as e:
+            logger.warning(e.err)
+            # resolve immediately
+            mov.set_quantity()
+            mov.confirm()
+        except Exception:
+            logger.exception('undefined error in movement confirmation')
+        mov_logger.info("added {mov.name} movement of {mov.quant} with " +
+                        "margin of {margin}")
+        mov_logger.debug(f"stop_limit: {stop_limit}")
 
 #         self.movements = []
 #         self.stocks = []
 
-#         # auto_quantity calculate quantity
-#         if auto_quantity is not None:
-#             # set the maximum quantity
-#             right_arrow = self._css("span.quantity-slider-right-arrow")[0]
-#             left_arrow = self._css("span.quantity-slider-left-arrow")[0]
-#             last_margin = None
-#             while last_margin != self.get_mov_margin():
-#                 time.sleep(0.8)
-#                 last_margin = self.get_mov_margin()
-#                 right_arrow.click()
-#                 if self._css('div.widget_message'):
-#                     widget = self._decode(self._css('div.widget_message'))
-#                     # in case of errors
-#                     if widget == 'INSFU':
-#                         logger.warning(
-#                             f"Insufficient funds to " +
-#                             f"buy {name} or reached limit")
-#                         self.close_mov()
-#                         return 'INSFU'
-#             # and descend
-#             while self.get_mov_margin() > auto_quantity:
-#                 left_arrow.click()
-#                 # check if margin is too high
-#                 quantity = self._css(path['quantity'])[0].value
-#                 if not quantity:
-#                     logger.warning(
-#                         f"Failed to add movement of {name} " +
-#                         "cause of margin too high")
-#                     self.close_mov()
-#                     return False
-#         # check margin and quantity used
-#         margin = self.get_mov_margin()
-#         quantity = self._css(path['quantity'])[0].value
-#         # set stop_limit
-#         if stop_limit is not None:
-#             try:
-#                 self._set_limit(stop_limit['mode'], stop_limit['value'])
-#                 self._css(path['confirm-btn'])[0].click()
-#                 if self._elCss('div.widget_message'):
-#                     while self._elCss('div.widget_message'):
-#                         num = self._decode_n_update(
-#                             self._css('div.widget_message'),
-#                             stop_limit['value'])
-#                         self._set_limit('unit', num)
-#                         self._css(path['confirm-btn'])[0].click()
-#             except Exception as e:
-#                 logger.error(e)
-#                 self.close_mov()
-#                 raise
-#                 return False
-#         else:
-#             stop_limit['value'] = None
-#             self._css(path['confirm-btn'])[0].click()
-#         while self._elCss(path['confirm-btn']):
-#             time.sleep(0.1)
-#         logger.info(
-#             f"Added movement of {bold(quantity)} {bold(name)} with " +
-#             f"limit {round(stop_limit['value'][0], 8)}, " +
-#             f"{round(stop_limit['value'][1], 8)} " +
-#             f" and margin of {margin}")
+
 #         return {'margin': margin, 'name': name}
-#
+
+    def closeMov(self, pos):
+        """close a mov given the position"""
+        # -- FROM HERE ----~~~\
+        # | need a position   |
+        # | object in lower   |
+        # \ level             |
+        # \----------------~~~/
+
 #     def closeMov(self, mov_id):
 #         """close a position"""
 #         self._css("#" + mov_id + " div.close-icon")[0].click()
@@ -109,7 +83,15 @@ class API(LowLevelAPI):
 #         else:
 #             logger.info(f"closed mov {mov_id}")
 #             return True
-#
+
+    def checkPos(self):
+        """check all positions"""
+        # -- FROM HERE ----~~~\
+        # | need a position   |
+        # | object in lower   |
+        # \ level             |
+        # \----------------~~~/
+
 #     def checkPos(self):
 #         """check all current positions"""
 #         soup = BeautifulSoup(
