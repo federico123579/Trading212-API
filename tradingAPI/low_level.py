@@ -1,48 +1,38 @@
+# -*- coding: utf-8 -*-
+
+"""
+tradingAPI.low_level
+~~~~~~~~~~~~~~
+
+This module provides the low level functions with the service.
+"""
+
 import time
-import selenium.common.exceptions
 import re
 from datetime import datetime
 from pyvirtualdisplay import Display
 from bs4 import BeautifulSoup
 from splinter import Browser
 from tradingAPI import exceptions
+from .glob import Glob
 from .links import path
+from .utils import num, expect, get_pip
+# exceptions
+import selenium.common.exceptions
 
 # logging
 import logging
-logger = logging.getLogger('tradingAPI')
-
-
-def expect(func, args, times=7, sleep_t=0.5):
-    """try many times as in times with sleep time"""
-    while times > 0:
-        try:
-            return func(*args)
-        except Exception as e:
-            times -= 1
-            time.sleep(sleep_t)
-            if times == 0:
-                raise exceptions.BaseExc(e)
-
-
-def num(string):
-    """convert a string to float"""
-    try:
-        string = re.sub('[^a-zA-Z0-9\n\.]', '', string)
-        number = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+", string)
-        return float(number[0])
-    except Exception as e:
-        logger = logging.getLogger('tradingAPI.num')
-        logger.debug("number not found in %s" % string)
-        return None
+logger = logging.getLogger('tradingAPI.low_level')
 
 
 class LowLevelAPI(object):
+    """low level api to interface with the service"""
     def __init__(self, brow="firefox"):
         self.brow_name = brow
+        Glob()
 
     def launch(self):
-        """launch browser and virtual display"""
+        """launch browser and virtual display, first of all to be launched"""
         try:
             # init virtual Display
             self.vbro = Display()
@@ -117,16 +107,15 @@ class LowLevelAPI(object):
             time.sleep(1)
             logger.info(f"logged in as {username}")
             # check if it's a weekend
-            if mode == "demo" and datetime.now().isoweekday() in range(6, 8):
+            if mode == "demo" and datetime.now().isoweekday() in range(5, 8):
                 timeout = time.time() + 10
                 while not self.elCss(path['alert-box']):
                     if time.time() > timeout:
-                        logger.warning(
-                            "weekend trading alert" +
-                            "box not closed")
+                        logger.warning("weekend trading alert-box not closed")
                         break
                 if self.elCss(path['alert-box']):
                     self.css1(path['alert-box']).click()
+                    logger.debug("weekend trading alert-box closed")
         except Exception as e:
             logger.critical("login failed")
             raise exceptions.BaseExc(e)
@@ -177,7 +166,7 @@ class LowLevelAPI(object):
         def __init__(self, api, name):
             self.api = api
             self.name = name
-            self.state = 'open'
+            self.state = 'initialized'
             self.insfu = False
 
         def open(self, name_counter=None):
@@ -186,6 +175,7 @@ class LowLevelAPI(object):
                 self.api.css1(path['add-mov']).click()
             else:
                 self.api.css1('span.dataTable-no-data-action').click()
+            logger.debug("opened window")
             self.api.css1(path['search-box']).fill(self.name)
             if self.get_result(0) is None:
                 logger.error("%s not found" % self.name)
@@ -196,16 +186,24 @@ class LowLevelAPI(object):
             if self.api.elCss("div.widget_message"):
                 self.decode(self.api.css1("div.widget_message"))
             self.name = name
-            logger.debug("opened window")
+            self.state = 'open'
+
+        def _check_open(self):
+            if self.state == 'open':
+                return True
+            else:
+                raise exceptions.WindowException()
 
         def close(self):
             """close a movement"""
+            self._check_open()
             self.api.css1(path['close']).click()
             self.state = 'closed'
             logger.debug("closed window")
 
         def confirm(self):
             """confirm the movement"""
+            self._check_open()
             self.api.css1(path['confirm-btn']).click()
             widg = self.api.css("div.widget_message")
             if widg:
@@ -216,6 +214,7 @@ class LowLevelAPI(object):
 
         def search_res(self, res, check_counter=None):
             """search for a res"""
+            logger.debug("searching result")
             result = self.get_result(0)
             name = self.get_research_name(result)
             x = 0
@@ -254,11 +253,13 @@ class LowLevelAPI(object):
             evalxpath = path['res'] + f"[{pos + 1}]"
             try:
                 return self.api.xpath(evalxpath)[0]
+                logger.debug("returned product at position %d" % pos + 1)
             except Exception:
                 return None
 
         def set_limit(self, category, mode, value):
             """set limit in movement window"""
+            self._check_open()
             if (mode not in ["unit", "value"] or category
                     not in ["gain", "loss", "both"]):
                 raise ValueError()
@@ -271,9 +272,10 @@ class LowLevelAPI(object):
             elif category == 'loss':
                 self.api.xpath(
                     path['limit-loss-%s' % mode])[0].fill(str(value))
-            self.stop_limit[category]['mode'] = mode
-            self.stop_limit[category]['value'] = value
-            if category == 'both':
+            if category != 'both':
+                self.stop_limit[category]['mode'] = mode
+                self.stop_limit[category]['value'] = value
+            elif category == 'both':
                 self.api.xpath(
                     path['limit-gain-%s' % mode])[0].fill(str(value))
                 self.api.xpath(
@@ -306,10 +308,12 @@ class LowLevelAPI(object):
 
         def get_mov_margin(self):
             """get the margin of the movement"""
+            self._check_open()
             return num(self.api.css1("span.cfd-order-info-item-value").text)
 
         def set_mode(self, mode):
             """set mode (buy or sell)"""
+            self._check_open()
             if mode not in ["buy", "sell"]:
                 raise ValueError()
             self.api.css1(path[mode + '-btn']).click()
@@ -318,15 +322,53 @@ class LowLevelAPI(object):
 
         def get_quantity(self):
             """gte current quantity"""
+            self._check_open()
             quant = int(num(self.api.css1(path['quantity']).value))
             self.quantity = quant
             return quant
 
         def set_quantity(self, quant):
             """set quantity"""
+            self._check_open()
             self.api.css1(path['quantity']).fill(str(quant))
             self.quantity = quant
             logger.debug("quantity set")
+
+        def get_price(self, mode='buy'):
+            """get current price"""
+            if mode not in ['buy', 'sell']:
+                raise ValueError()
+            self._check_open()
+            price = num(self.api.css1(
+                "div.orderdialog div.tradebox-price-%s" % mode).text)
+            self.price = price
+            return price
+
+        def get_unit_value(self):
+            """get unit value of stock based on margin, memoized"""
+            # find in the collection
+            try:
+                unit_value = Glob().theCollector.collection['unit_value']
+                unit_value_res = unit_value[self.name]
+                logger.debug("unit_value found in the collection")
+                return unit_value_res
+            except KeyError:
+                logger.debug("unit_value not found in the collection")
+            pip = get_pip(mov=self)
+            quant = 1 / pip
+            if hasattr(self, 'quantity'):
+                old_quant == self.quantity
+            self.set_quantity(quant)
+            # update the site
+            time.sleep(0.5)
+            margin = self.get_mov_margin()
+            logger.debug(f"quant: {quant} - pip: {pip} - margin: {margin}")
+            if 'old_quant' in locals():
+                self.set_quantity(old_quant)
+            unit_val = margin / quant
+            self.unit_value = unit_val
+            Glob().unit_valueHandler.add_val({self.name: unit_val})
+            return unit_val
 
     def new_mov(self, name):
         return self.MovementWindow(self, name)

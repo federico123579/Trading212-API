@@ -28,6 +28,14 @@ class BrowserException(Exception):
         super().__init__(err)
 
 
+class WindowException(Exception):
+    """exception for not opened windows"""
+    def __init__(self):
+        err = "window hasn't been opened yet"
+        logger.error(err)
+        super().__init__(err)
+
+
 class CredentialsException(Exception):
     """credential exception"""
     def __init__(self, username):

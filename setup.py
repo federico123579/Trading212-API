@@ -7,7 +7,8 @@ setup(
     install_requires=[
         'splinter',
         'pyvirtualdisplay',
-        'bs4'
+        'bs4',
+        'pyyaml'
     ],
     include_package_data=True,
     package_data={'': ['*.ini', 'logs/*.ini']},

@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+
+"""
+tradingAPI.links
+~~~~~~~~~~~~~~
+
+This module provides info about pathes.
+"""
+
+import os.path
+
 path = {
     'login-btn': "#login-button",
     'log': "input.btn-head",
@@ -28,4 +39,9 @@ path = {
     'close-prefs': "div.back-button",
     'close': "span.orderdialog-close",
     'movs-table': "div#accountPanel .table-body",
+}
+
+file_path = {
+    'pip': os.path.join(os.path.dirname(__file__), 'data', 'pip.yml'),
+    'unit_value': os.path.join(os.path.dirname(__file__), 'data', 'unit_value.yml')
 }

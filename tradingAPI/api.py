@@ -1,35 +1,41 @@
 from .low_level import LowLevelAPI
 
+# logging
+import logging
+logger = logging.getLogger('tradingAPI')
 
 class API(LowLevelAPI):
     """Interface object"""
     def __init__(self, brow='firefox'):
         super().__init__(brow)
 
+    def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
+               auto_margin=None, name_counter=None):
+        """main function for placing movements"""
+        # ~ ARGS ~
+        if (not isinstance(product, type('')) and
+                not isinstance(name_counter, type(''))):
+            raise ValueError(str())
+        # exclusive args
+        if quantity is not None and auto_margin is not None:
+            logger.error("quantity and auto_margin are exclusive")
+            raise ValueError()
+        elif quantity is None and auto_margin is None:
+            logger.error("need at least one quantity")
+            raise ValueError()
+        # ~ MAIN ~
+        # open new window
+        mov = self.new_mov(product)
+        mov.open()
+        # set quantity
+        if quantity is not None:
+            mov.set_quantity(quantity)
+        # auto_margin calculate quantity
+        # FROM HERE -----~~~
 
 #         self.movements = []
 #         self.stocks = []
-#
-#     def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
-#                auto_quantity=None, name_counter=None):
-#         """Add movement function"""
-#         name = self.open_mov(product, name_counter=name_counter)
-#         if name == "INSFU":
-#             logger.warning(
-#                 f"Insufficient funds to " +
-#                 f"buy {name} or reached limit")
-#             self.close_mov()
-#             return 'INSFU'
-#         self._css(path[mode + '-btn'])[0].click()
-#         # override quantity
-#         if quantity is not None and auto_quantity is not None:
-#             logger.warning(
-#                 "quantity and auto_quantity are exclusive, " +
-#                 "overriding quantity")
-#             quantity = None
-#         # set quantity
-#         if quantity is not None:
-#             self.set_quantity(quantity)
+
 #         # auto_quantity calculate quantity
 #         if auto_quantity is not None:
 #             # set the maximum quantity
