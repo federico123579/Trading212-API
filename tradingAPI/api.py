@@ -1,3 +1,5 @@
+from bs4 import BeautifulSoup
+from .links import path
 from .low_level import LowLevelAPI
 
 # logging
@@ -64,64 +66,39 @@ class API(LowLevelAPI):
 
 #         return {'margin': margin, 'name': name}
 
-    def closeMov(self, pos):
+    def closePos(self):
         """close a mov given the position"""
         # -- FROM HERE ----~~~\
         # | need a position   |
         # | object in lower   |
         # \ level             |
         # \----------------~~~/
-
-#     def closeMov(self, mov_id):
-#         """close a position"""
-#         self._css("#" + mov_id + " div.close-icon")[0].click()
-#         self.browser.find_by_text("OK")[0].click()
-#         time.sleep(1.5)
-#         if self._elCss("#" + mov_id + " div.close-icon"):
-#             logger.error(f"failed to close mov {mov_id}")
-#             return False
-#         else:
-#             logger.info(f"closed mov {mov_id}")
-#             return True
+        pass
 
     def checkPos(self):
         """check all positions"""
-        # -- FROM HERE ----~~~\
-        # | need a position   |
-        # | object in lower   |
-        # \ level             |
-        # \----------------~~~/
+        soup = BeautifulSoup(self.css1(path['movs-table']).html, 'html.parser')
+        for label in soup.find_all("tr"):
+            pos_id = label['id']
+            # init an empty list
+            poss = []
+            # check if it already exist
+            pos_list = [x for x in self.positions if x.id == pos_id]
+            if pos_list:
+                # and update it
+                pos = pos_list[0]
+                pos.update(label)
+            else:
+                pos = self.new_pos(label)
+            pos.get_gain()
+            poss.append(pos)
+            # remove old positions
+            self.positions.clear()
+            self.positions.extend(poss)
+        logger.debug("%d positions update" % len(poss))
+        return self.positions
 
-#     def checkPos(self):
-#         """check all current positions"""
-#         soup = BeautifulSoup(
-#             self._css(path['movs-table'])[0].html,
-#             "html.parser")
-#         movs = []
-#         for x in soup.find_all("tr"):
-#             try:
-#                 prod_id = x['id']
-#                 product = x.select("td.name")[0].text
-#                 quant = self._num(x.select("td.quantity")[0].text)
-#                 if ("direction-label-buy" in soup.find_all("tr")[0]
-#                         .select("td.direction")[0].span['class']):
-#                     mode = "long"
-#                 else:
-#                     mode = "short"
-#                 price = self._num(x.select("td.averagePrice")[0].text)
-#                 curr = self._num(x.select("td.currentPrice")[0]
-#                                  .select("span.price-info")[0].text)
-#                 earn = self._num(x.select("td.ppl")[0].text)
-#                 mov = Movement(prod_id, product, quant, mode,
-#                                price, curr, earn)
-#                 movs.append(mov)
-#             except Exception as e:
-#                 logger.error(e)
-#         logger.debug(f"{len(movs)} positions updated")
-#         self.movements.clear()
-#         self.movements.extend(movs)
-#         return self.movements
-#
+
 #     def checkStocks(self, stocks):
 #         """check specified stocks (list)"""
 #

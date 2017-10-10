@@ -1,4 +1,4 @@
-# from tradingAPI.api import API
+from tradingAPI.api import API
 from tradingAPI.low_level import LowLevelAPI
 import os.path
 import logging
@@ -26,7 +26,7 @@ logging.config.dictConfig({
         },
         'rotating': {
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'level': 'DEBUG'
+            'level': 'DEBUG',
             'formatter': 'deafult',
             'filename': os.path.join(
                 os.path.dirname(__file__), 'logs/logfile.log'),
@@ -49,7 +49,7 @@ logging.config.dictConfig({
             'propagate': True
         },
         'tradingAPI': {
-            'handlers': ['rotating', 'console'],
+            'handlers': ['rotating'],
             'level': 'DEBUG'
         },
         'mover': {

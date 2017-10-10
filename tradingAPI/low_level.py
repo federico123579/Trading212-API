@@ -25,10 +25,30 @@ import logging
 logger = logging.getLogger('tradingAPI.low_level')
 
 
+class Movement(object):
+    """class-storing movement"""
+    def __init__(self, product, quantity, mode, price):
+        self.product = product
+        self.quantity = quantity
+        self.mode = mode
+        self.price = price
+
+
+class PurePosition(object):
+    """class-storing position"""
+    def __init__(self, product, quantity, mode, price):
+        self.product = product
+        self.quantity = quantity
+        self.mode = mode
+        self.price = price
+
+
 class LowLevelAPI(object):
     """low level api to interface with the service"""
     def __init__(self, brow="firefox"):
         self.brow_name = brow
+        self.positions = []
+        # init globals
         Glob()
 
     def launch(self):
@@ -373,4 +393,65 @@ class LowLevelAPI(object):
             return unit_val
 
     def new_mov(self, name):
+        """factory method pattern"""
         return self.MovementWindow(self, name)
+
+    class Position(PurePosition):
+        """position object"""
+        def __init__(self, api, html_div):
+            """initialized from div"""
+            self.api = api
+            if isinstance(html_div, type('')):
+                self.soup_data = BeautifulSoup(html_div, 'html.parser')
+            else:
+                self.soup_data = html_div
+            self.product = self.soup_data.select("td.name")[0].text
+            self.quantity = num(self.soup_data.select("td.quantity")[0].text)
+            if ("direction-label-buy" in
+                    self.soup_data.select("td.direction")[0].span['class']):
+                self.mode = 'buy'
+            else:
+                self.mode = 'sell'
+            self.price = num(self.soup_data.select("td.averagePrice")[0].text)
+            self.id = self.find_id()
+
+        def update(self, soup):
+            """update the soup"""
+            self.soup_data = soup
+            return soup
+
+        def find_id(self):
+            """find pos ID with with given data"""
+            pos_id = self.soup_data['id']
+            self.id = pos_id
+            return pos_id
+
+        @property
+        def close_tag(self):
+            """obtain close tag"""
+            return f"#{self.id} div.close-icon"
+
+        def close(self):
+            """close position via tag"""
+            self.api.css1(self.close_tag).click()
+            self.api.search_name('OK')[0].click()
+            # wait until it's been closed
+            # set a timeout
+            timeout = time.time() + 10
+            while self.api.elCss(self.close_tag):
+                time.sleep(0.1)
+                if time.time() > timeout:
+                    raise TimeoutError("failed to close pos %s" % self.id)
+            logger.debug("closed pos %s" % self.id)
+
+        def get_gain(self):
+            """get current profit"""
+            gain = num(self.soup_data.select("td.ppl")[0].text)
+            self.gain = gain
+            return gain
+
+    def new_pos(self, html_div):
+        """factory method pattern"""
+        pos = self.Position(self, html_div)
+        self.positions.append(pos)
+        return pos
