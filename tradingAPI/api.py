@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 from .links import path
-from .low_level import LowLevelAPI
+# exceptions
+from tradingAPI import exceptions
+from .low_level import LowLevelAPI, Stock
 
 # logging
 import logging
@@ -12,17 +14,20 @@ class API(LowLevelAPI):
     """Interface object"""
     def __init__(self, brow='firefox'):
         super().__init__(brow)
+        self.preferences = []
+        self.stocks = []
 
     def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
                auto_margin=None, name_counter=None):
         """main function for placing movements
         stop_limit = {'gain': [mode, value], 'loss': [mode, value]}"""
         # ~ ARGS ~
-        if (not isinstance(product, type('')) and
-                not isinstance(name_counter, type(''))):
+        if (not isinstance(product, type('')) or
+                (not isinstance(name_counter, type('')) and
+                 name_counter is not None)):
             raise ValueError('product and name_counter have to be a string')
-        if not isinstance(stop_limit, type({})):
-            raise ValueError('has to be a dictionary')
+        if not isinstance(stop_limit, type({})) and stop_limit is not None:
+            raise ValueError('it has to be a dictionary')
         # exclusive args
         if quantity is not None and auto_margin is not None:
             raise ValueError("quantity and auto_margin are exclusive")
@@ -32,11 +37,17 @@ class API(LowLevelAPI):
         # open new window
         mov = self.new_mov(product)
         mov.open()
+        mov.set_mode(mode)
         # set quantity
         if quantity is not None:
             mov.set_quantity(quantity)
             # for best performance in long times
-            margin = mov.get_unit_value() * quant
+            try:
+                margin = mov.get_unit_value() * quantity
+            except TimeoutError:
+                mov.close()
+                logger.warning("market closed for %s" % mov.product)
+                return False
         # auto_margin calculate quantity (how simple!)
         elif auto_margin is not None:
             unit_value = mov.get_unit_value()
@@ -49,39 +60,26 @@ class API(LowLevelAPI):
         # confirm
         try:
             mov.confirm()
-        except MaxQuantLimit as e:
+        except (exceptions.MaxQuantLimit, exceptions.MinQuantLimit) as e:
             logger.warning(e.err)
             # resolve immediately
-            mov.set_quantity()
+            mov.set_quantity(e.quant)
             mov.confirm()
         except Exception:
             logger.exception('undefined error in movement confirmation')
-        mov_logger.info("added {mov.name} movement of {mov.quant} with " +
-                        "margin of {margin}")
+        mov_logger.info(f"added {mov.product} movement of {mov.quantity} " +
+                        f"with margin of {margin}")
         mov_logger.debug(f"stop_limit: {stop_limit}")
 
-#         self.movements = []
-#         self.stocks = []
-
-
 #         return {'margin': margin, 'name': name}
-
-    def closePos(self):
-        """close a mov given the position"""
-        # -- FROM HERE ----~~~\
-        # | need a position   |
-        # | object in lower   |
-        # \ level             |
-        # \----------------~~~/
-        pass
 
     def checkPos(self):
         """check all positions"""
         soup = BeautifulSoup(self.css1(path['movs-table']).html, 'html.parser')
+        poss = []
         for label in soup.find_all("tr"):
             pos_id = label['id']
             # init an empty list
-            poss = []
             # check if it already exist
             pos_list = [x for x in self.positions if x.id == pos_id]
             if pos_list:
@@ -92,124 +90,75 @@ class API(LowLevelAPI):
                 pos = self.new_pos(label)
             pos.get_gain()
             poss.append(pos)
-            # remove old positions
-            self.positions.clear()
-            self.positions.extend(poss)
+        # remove old positions
+        self.positions.clear()
+        self.positions.extend(poss)
         logger.debug("%d positions update" % len(poss))
         return self.positions
 
+    def checkStock(self):
+        """check stocks in preference"""
+        if not self.preferences:
+            logger.debug("no preferences")
+            return None
+        soup = BeautifulSoup(
+            self.xpath(path['stock-table'])[0].html, "html.parser")
+        count = 0
+        # iterate through product in left panel
+        for product in soup.select("div.tradebox"):
+            prod_name = product.select("span.instrument-name")[0].text
+            stk_name = [x for x in self.preferences
+                        if x.lower() in prod_name.lower()]
+            if not stk_name:
+                continue
+            name = prod_name
+            if not [x for x in self.stocks if x.product == name]:
+                self.stocks.append(Stock(name))
+            stock = [x for x in self.stocks if x.product == name][0]
+            if 'tradebox-market-closed' in product['class']:
+                stock.market = False
+            if not stock.market:
+                logger.debug("market closed for %s" % stock.product)
+                continue
+            sell_price = product.select("div.tradebox-price-sell")[0].text
+            buy_price = product.select("div.tradebox-price-buy")[0].text
+            sent = int(product.select(path['sent'])[0].text.strip('%')) / 100
+            stock.new_rec([sell_price, buy_price, sent])
+            count += 1
+        logger.debug(f"added %d stocks" % count)
+        return self.stocks
 
-#     def checkStocks(self, stocks):
-#         """check specified stocks (list)"""
-#
-#         soup = BeautifulSoup(
-#             self._xpath('//*[@id="tradePanel"]/div[5]/div[3]/div')[0].html,
-#             "html.parser")
-#         count = 0
-#         for product in soup.select("div.tradebox"):
-#             fullname = product.select("span.instrument-name")[0].text.lower()
-#             name = [x for x in stocks
-#                     if fullname.lower().find(x.lower()) != -1]
-#             if name:
-#                 name = name[0]
-#                 if not [x for x in self.stocks if x.name == name]:
-#                     self.stocks.append(Stock(name))
-#                 stock = [x for x in self.stocks if x.name == name][0]
-#                 mark_closed_list = [x for x in product.select(
-#                     "div.quantity-list-input-wrapper") if x.select(
-#                     "div.placeholder")[0].text.lower().find("close") != -1]
-#                 if len(mark_closed_list) != 0:
-#                     market = False
-#                 else:
-#                     market = True
-#                 stock.market = market
-#                 if market is True:
-#                     sell_price = product.select("div.tradebox-price-sell")[0]\
-#                         .text
-#                     raw_sent = product.select(
-#                         "span.tradebox-buyers-container.number-box")[0].text
-#                     try:
-#                         sent = (int(raw_sent.strip('%')) / 100)
-#                     except Exception as e:
-#                         logger.warning(e)
-#                         sent = None
-#                     stock.addVar([float(sell_price), sent])
-#                     count += 1
-#         logger.debug(f"added {bold(count)} stocks")
-#         return True
-#
-#     def addPrefs(self, prefs):
-#         """add prefered stocks"""
-#         try:
-#             for pref in prefs:
-#                 self._css(path['search-btn'])[0].click()
-#                 self._css(path['all-tools'])[0].click()
-#                 self._css(path['search-pref'])[0].fill(pref)
-#                 if self._elCss(path['plus-icon']):
-#                     self._css(path['add-btn'])[0].click()
-#                 if self._elCss('span.btn-primary'):
-#                     self._css('span.btn-primary')[0].click()
-#             self._css(path['close-prefs'])[0].click()
-#             logger.info("added {prefs} to preferencies".format(
-#                 prefs=', '.join([bold(x) for x in prefs])))
-#             self._css("span.prefs-icon-node")[0].click()
-#             self._css(
-#                 "div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
-#             self._css("span.equity-menu-btn-icon")[0].click()
-#             self._css("div.equity-menu-items-list ")[0].click()
-#             self._css("span.prefs-icon-node")[0].click()
-#             logger.debug("set sentiment mode")
-#             self._css("span.equity-menu-btn-icon")[0].click()
-#             info_list = self._css("div.equity-menu-items-list")[0]
-#             prefs_info_list = ['Free funds', 'Used margin']
-#             for pref_info in prefs_info_list:
-#                 checkbox = info_list.find_by_text(pref_info)[-1]
-#                 if 'selected' not in checkbox['class'].split(' '):
-#                     checkbox.find_by_css("svg")[0].click()
-#             self._css("span.equity-menu-btn-icon")[0].click()
-#             logger.debug("set bottom info")
-#             return True
-#         except Exception:
-#             logger.error("addPrefs failed")
-#             raise
-#
-#     def clearPrefs(self):
-#         """clear all stock preferencies"""
-#         try:
-#             self._css(path['search-btn'])[0].click()
-#             self._css(path['all-tools'])[0].click()
-#             for res in self._css("div.search-results-list-item"):
-#                 if not res.find_by_css(path['plus-icon']):
-#                     res.find_by_css(path['add-btn'])[0].click()
-#             self._css('div.widget_message span.btn')[0].click()
-#             # fix errors
-#             self._css(path['close-prefs'])[0].click()
-#             while not self._elCss(path['search-btn']):
-#                 time.sleep(0.5)
-#             logger.debug("cleared preferencies")
-#             return True
-#         except Exception:
-#             logger.error("clearPrefs failed")
-#             raise
-#
-#
-# class Movement(object):
-#     def __init__(self, prod_id, product, quantity, mode, price, curr, earn):
-#         self.id = prod_id
-#         self.product = product
-#         self.quantity = quantity
-#         self.mode = mode
-#         self.price = price
-#         self.curr = curr
-#         self.earn = earn
-#
-#
-# class Stock(object):
-#     def __init__(self, name):
-#         self.name = name
-#         self.market = False
-#         self.vars = []
-#
-#     def addVar(self, var):
-#         """add a variation (list)"""
-#         self.vars.append(var)
+    def addPrefs(self, prefs=[]):
+        self.preferences.extend(prefs)
+
+    def clearPrefs(self):
+        """clear the left panel and preferences"""
+        self.preferences.clear()
+        tradebox_num = len(self.css('div.tradebox'))
+        for i in range(tradebox_num):
+            self.xpath(path['trade-box'])[0].right_click()
+            self.css1('div.item-trade-contextmenu-list-remove').click()
+        logger.info("cleared preferences")
+
+    def addPrefs(self, prefs=[]):
+        """add preference in self.preferences"""
+        if len(prefs) == len(self.preferences) == 0:
+            logger.debug("no preferences")
+            return None
+        self.preferences.extend(prefs)
+        self.css1(path['search-btn']).click()
+        count = 0
+        for pref in self.preferences:
+            self.css1(path['search-pref']).fill(pref)
+            self.css1(path['pref-icon']).click()
+            btn = self.css1('div.add-to-watchlist-popup-item .icon-wrapper')
+            if not self.css1('svg', btn)['class'] is None:
+                btn.click()
+                count += 1
+            # remove window
+            self.css1(path['pref-icon']).click()
+        # close finally
+        self.css1(path['back-btn']).click()
+        self.css1(path['back-btn']).click()
+        logger.debug("updated %d preferences" % count)
+        return self.preferences

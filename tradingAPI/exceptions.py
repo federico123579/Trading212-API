@@ -58,4 +58,23 @@ class MaxQuantLimit(Exception):
     def __init__(self, quant):
         self.quant = quant
         self.err = "max quantity reached, need to be below %d" % quant
-        super().__init__(self.err)
+
+
+class MinQuantLimit(Exception):
+    """in case of minimum quantity exceeding"""
+    def __init__(self, quant):
+        self.quant = quant
+        self.err = "min quantity reached, need to be above %d" % quant
+
+
+class MarketClosed(Exception):
+    """base exception for closed market"""
+    def __init__(self):
+        super().__init__()
+
+
+class ProductNotFound(Exception):
+    def __init__(self, product_name):
+        err = "%s not found" % product_name
+        logger.error(err)
+        super().__init__(err)

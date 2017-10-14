@@ -25,6 +25,19 @@ import logging
 logger = logging.getLogger('tradingAPI.low_level')
 
 
+class Stock(object):
+    """base class for stocks"""
+    def __init__(self, product):
+        self.product = product
+        self.market = True
+        self.records = []
+
+    def new_rec(self, rec):
+        """add a record"""
+        self.records.append(rec)
+        return self.records
+
+
 class Movement(object):
     """class-storing movement"""
     def __init__(self, product, quantity, mode, price):
@@ -42,12 +55,18 @@ class PurePosition(object):
         self.mode = mode
         self.price = price
 
+    def __repr__(self):
+        return ' - '.join([str(self.product), str(self.quantity),
+                           str(self.mode), str(self.price)])
+
 
 class LowLevelAPI(object):
     """low level api to interface with the service"""
     def __init__(self, brow="firefox"):
         self.brow_name = brow
         self.positions = []
+        self.movements = []
+        self.stocks = []
         # init globals
         Glob()
 
@@ -78,7 +97,12 @@ class LowLevelAPI(object):
         """return the first value of self.css"""
         if dom is None:
             dom = self.browser
-        return self.css(css_path, dom)[0]
+
+        def _css1(path, domm):
+            """virtual local func"""
+            return self.css(path, domm)[0]
+
+        return expect(_css1, args=[css_path, dom])
 
     def search_name(self, name, dom=None):
         """name find function abbreviation"""
@@ -170,7 +194,7 @@ class LowLevelAPI(object):
             self.css1("div.scrollable-area-content").html, "html.parser")
         for product in soup.select("div.tradebox"):
             fullname = product.select("span.instrument-name")[0].text.lower()
-            if fullname.find(name.lower()) != -1:
+            if name.lower() in fullname:
                 mark_closed_list = [x for x in product.select(
                     "div.quantity-list-input-wrapper") if x.select(
                     "div.placeholder")[0].text.lower().find("close") != -1]
@@ -183,9 +207,9 @@ class LowLevelAPI(object):
 
     class MovementWindow(object):
         """add movement window"""
-        def __init__(self, api, name):
+        def __init__(self, api, product):
             self.api = api
-            self.name = name
+            self.product = product
             self.state = 'initialized'
             self.insfu = False
 
@@ -196,16 +220,15 @@ class LowLevelAPI(object):
             else:
                 self.api.css1('span.dataTable-no-data-action').click()
             logger.debug("opened window")
-            self.api.css1(path['search-box']).fill(self.name)
+            self.api.css1(path['search-box']).fill(self.product)
             if self.get_result(0) is None:
-                logger.error("%s not found" % self.name)
-                self.close_mov()
-                raise ValueError('%s not found in mov list' % self.name)
-            result, name = self.search_res(self.name, name_counter)
+                self.api.css1(path['close']).click()
+                raise exceptions.ProductNotFound(self.product)
+            result, product = self.search_res(self.product, name_counter)
             result.click()
             if self.api.elCss("div.widget_message"):
                 self.decode(self.api.css1("div.widget_message"))
-            self.name = name
+            self.product = product
             self.state = 'open'
 
         def _check_open(self):
@@ -224,11 +247,16 @@ class LowLevelAPI(object):
         def confirm(self):
             """confirm the movement"""
             self._check_open()
+            self.get_price()
             self.api.css1(path['confirm-btn']).click()
             widg = self.api.css("div.widget_message")
             if widg:
                 self.decode(widg[0])
                 raise exceptions.WidgetException(widg)
+            if all(x for x in ['quantity', 'mode'] if hasattr(self, x)):
+                self.api.movements.append(Movement(
+                    self.product, self.quantity, self.mode, self.price))
+                logger.debug("%s movement appended to the list" % self.product)
             self.state = 'conclused'
             logger.debug("confirmed movement")
 
@@ -240,10 +268,14 @@ class LowLevelAPI(object):
             x = 0
             while not self.check_name(res, name, counter=check_counter):
                 name = self.get_research_name(self.get_result(x))
+                if name is None:
+                    self.api.css1(path['close']).click()
+                    raise exceptions.ProductNotFound(res)
                 logger.debug(name)
                 if self.check_name(res, name, counter=check_counter):
                     return self.get_result(x)
                 x += 1
+            logger.debug("found product at position %d" % (x + 1))
             return result, name
 
         def check_name(self, name, string, counter=None):
@@ -266,14 +298,16 @@ class LowLevelAPI(object):
 
         def get_research_name(self, res):
             """return result name"""
+            if res is None:
+                return None
             return self.api.css1("span.instrument-name", res).text
 
         def get_result(self, pos):
             """get pos result, where 0 is first"""
             evalxpath = path['res'] + f"[{pos + 1}]"
             try:
-                return self.api.xpath(evalxpath)[0]
-                logger.debug("returned product at position %d" % pos + 1)
+                res = self.api.xpath(evalxpath)[0]
+                return res
             except Exception:
                 return None
 
@@ -313,6 +347,8 @@ class LowLevelAPI(object):
                 self.insfu = True
             elif title == "Maximum Quantity Limit":
                 raise exceptions.MaxQuantLimit(num(text))
+            elif title == "Minimum Quantity Limit":
+                raise exceptions.MinQuantLimit(num(text))
             logger.debug("decoded message")
 
         def decode_update(self, message, value, mult=0.1):
@@ -352,7 +388,7 @@ class LowLevelAPI(object):
         def set_quantity(self, quant):
             """set quantity"""
             self._check_open()
-            self.api.css1(path['quantity']).fill(str(quant))
+            self.api.css1(path['quantity']).fill(str(int(quant)))
             self.quantity = quant
             logger.debug("quantity set")
 
@@ -371,7 +407,7 @@ class LowLevelAPI(object):
             # find in the collection
             try:
                 unit_value = Glob().theCollector.collection['unit_value']
-                unit_value_res = unit_value[self.name]
+                unit_value_res = unit_value[self.product]
                 logger.debug("unit_value found in the collection")
                 return unit_value_res
             except KeyError:
@@ -389,7 +425,7 @@ class LowLevelAPI(object):
                 self.set_quantity(old_quant)
             unit_val = margin / quant
             self.unit_value = unit_val
-            Glob().unit_valueHandler.add_val({self.name: unit_val})
+            Glob().unit_valueHandler.add_val({self.product: unit_val})
             return unit_val
 
     def new_mov(self, name):
@@ -413,6 +449,7 @@ class LowLevelAPI(object):
             else:
                 self.mode = 'sell'
             self.price = num(self.soup_data.select("td.averagePrice")[0].text)
+            self.margin = num(self.soup_data.select("td.margin")[0].text)
             self.id = self.find_id()
 
         def update(self, soup):
@@ -434,8 +471,16 @@ class LowLevelAPI(object):
         def close(self):
             """close position via tag"""
             self.api.css1(self.close_tag).click()
-            self.api.search_name('OK')[0].click()
-            # wait until it's been closed
+            try:
+                self.api.xpath(path['ok_but'])[0].click()
+            except selenium.common.exceptions.ElementNotInteractableException:
+                if (self.api.css1('.widget_message div.title').text ==
+                        'Market Closed'):
+                    logger.error("market closed, position can't be closed")
+                    raise exceptions.MarketClosed()
+                raise exceptions.WidgetException(
+                    self.api.css1('.widget_message div.text').text)
+                # wait until it's been closed
             # set a timeout
             timeout = time.time() + 10
             while self.api.elCss(self.close_tag):
@@ -450,8 +495,37 @@ class LowLevelAPI(object):
             self.gain = gain
             return gain
 
+        def bind_mov(self):
+            """bind the corresponding movement"""
+            logger = logging.getLogger("tradingAPI.low_level.bind_mov")
+            mov_list = [x for x in self.api.movements
+                        if x.product == self.product and
+                        x.quantity == self.quantity and
+                        x.mode == self.mode]
+            if not mov_list:
+                logger.debug("fail: mov not found")
+                return None
+            else:
+                logger.debug("success: found movement")
+            for x in mov_list:
+                # find approximate price
+                max_roof = self.price + self.price * 0.01
+                min_roof = self.price - self.price * 0.01
+                if min_roof < x.price < max_roof:
+                    logger.debug("success: price corresponding")
+                    # bind mov
+                    self.mov = x
+                    return x
+                else:
+                    logger.debug("fail: price %f not corresponding to %f" %
+                                 (self.price, x.price))
+                    continue
+            # if nothing, return None
+            return None
+
     def new_pos(self, html_div):
         """factory method pattern"""
         pos = self.Position(self, html_div)
+        pos.bind_mov()
         self.positions.append(pos)
         return pos

@@ -53,7 +53,7 @@ logging.config.dictConfig({
             'level': 'DEBUG'
         },
         'mover': {
-            'handlers': ['movs_handler', 'console'],
+            'handlers': ['movs_handler'],
             'level': 'INFO'
         }
     }

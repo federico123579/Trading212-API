@@ -9,6 +9,7 @@ This module provides utility functions.
 
 import time
 import re
+from tradingAPI import exceptions
 from .glob import Glob
 
 # logging
@@ -34,7 +35,7 @@ def num(string):
     if not isinstance(string, type('')):
         raise ValueError(type(''))
     try:
-        string = re.sub('[^a-zA-Z0-9\n\.]', '', string)
+        string = re.sub('[^a-zA-Z0-9\.\-]', '', string)
         number = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+", string)
         return float(number[0])
     except Exception as e:
@@ -79,7 +80,7 @@ def get_pip(mov=None, api=None, name=None):
         if name is not None:
             pip_res = pip[name]
         elif mov is not None:
-            pip_res = pip[mov.name]
+            pip_res = pip[mov.product]
         logger.debug("pip found in the collection")
         return pip_res
     except KeyError:
@@ -98,7 +99,7 @@ def get_pip(mov=None, api=None, name=None):
     for interval in intervals:
         _check_price(interval)
         if min(records) == max(records):
-            logger.warning("no variation in %d seconds" % interval)
+            logger.debug("no variation in %d seconds" % interval)
             if interval == intervals[-1]:
                 raise TimeoutError("no variation")
         else:
@@ -112,5 +113,5 @@ def get_pip(mov=None, api=None, name=None):
             best_price = price
     # get pip
     pip = get_number_unit(best_price)
-    Glob().pipHandler.add_val({mov.name: pip})
+    Glob().pipHandler.add_val({mov.product: pip})
     return pip
