@@ -2,15 +2,16 @@ from setuptools import setup, find_packages
 
 setup(
     name="trading212api",
-    version="0.1b4",
-    packages=['tradingAPI'],
+    version="v0.2rc1",
+    packages=find_packages(),
     install_requires=[
         'splinter',
         'pyvirtualdisplay',
-        'bs4'
+        'bs4',
+        'pyyaml'
     ],
     include_package_data=True,
-    package_data={'': ['*.conf']},
+    package_data={'': ['*.ini', 'logs/*.ini']},
     zip_safe=False,
     author="Federico Lolli",
     author_email="federico123579@gmail.com",
@@ -23,8 +24,6 @@ setup(
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Topic :: Software Development :: User Interfaces',
         'Topic :: System :: Emulators'

@@ -1,276 +1,164 @@
-import re
-import selenium.common.exceptions
-from pyvirtualdisplay import Display
 from bs4 import BeautifulSoup
-from splinter import Browser
-from time import sleep
-from .exceptions import *
-from .logger import logger
-from .color import *
-from .data import *
+from .links import path
+# exceptions
+from tradingAPI import exceptions
+from .low_level import LowLevelAPI, Stock
+
+# logging
+import logging
+logger = logging.getLogger('tradingAPI')
+mov_logger = logging.getLogger('mover')
 
 
-class API(object):
-    '''Interface object'''
-
-    def __init__(self, level="debug"):
-        self.movements = []
+class API(LowLevelAPI):
+    """Interface object"""
+    def __init__(self, brow='firefox'):
+        super().__init__(brow)
+        self.preferences = []
         self.stocks = []
-        self.logger = logger(level)
-        self.vbro = Display()
 
-    def _css(self, css_path):
-        '''css find function abbreviation'''
-        fails = 0
-        exc = None
-        while fails < 3:
-            try:
-                result = self.browser.find_by_css(css_path)
-                return result
-            except Exception as e:
-                exc = e
-                fails += 1
-                sleep(0.5)
-        self.logger.error(exc)
-        return 0
-
-    def _name(self, name):
-        '''name find function abbreviation'''
-        fails = 0
-        exc = None
-        while fails < 3:
-            try:
-                result = self.browser.find_by_name(name)
-                return result
-            except Exception as e:
-                exc = e
-                fails += 1
-                sleep(0.5)
-        self.logger.error(exc)
-        return 0
-
-    def _elCss(self, css_path):
-        '''check if element is present by css'''
-        return self.browser.is_element_present_by_css(css_path)
-
-    def _num(self, string):
-        '''convert a string to float (float gave me problems)'''
-        return re.findall(r"[-+]?\d*\.\d+|\d+", string)[0]
-
-    def launch(self, brow="firefox"):
-        '''launch browser and virtual display'''
-        try:
-            self.vbro.start()
-            self.logger.debug("virtual display launched")
-        except Exception:
-            self.logger.critical("virtual display failed to launch")
-            return 0
-        try:
-            self.browser = Browser(brow)
-            self.logger.debug("browser {brow} launched".format(brow=brow))
-        except Exception as e:
-            self.logger.critical("browser {brow} failed to launch"
-                                 .format(brow=brow))
-            self.logger.critical(e)
-            return 0
-        return 1
-
-    def login(self, username, password, mode="demo"):
-        '''Login function'''
-        url = "https://trading212.com/it/login"
-        try:
-            self.browser.visit(url)
-            self.logger.debug("visiting {url}".format(url=url))
-        except selenium.common.exceptions.WebDriverException:
-            self.logger.critical("connection timed out")
-            return 0
-        try:
-            self._name("login[username]").fill(username)
-            self._name("login[password]").fill(password)
-            self._css(path['log']).click()
-            timeout = 30
-            while not self._elCss(path['logo']):
-                timeout -= 1
-                if timeout == 0:
-                    self.logger.critical("login failed")
-                    return 0
-            sleep(1)
-            self.logger.debug("logged in as {}".format(bold(username)))
-            if mode == "demo" and self._elCss(path['alert-box']):
-                self._css(path['alert-box']).click()
-            return 1
-        except Exception:
-            self.logger.critical("login failed")
-            return 0
-
-    def logout(self):
-        '''logout func (to quit browser)'''
-        try:
-            self.browser.quit()
-        except Exception:
-            raise BrowserException("browser not started")
-            return 0
-        self.vbro.stop()
-        self.logger.debug("Logged out")
-        return 1
-
-    def addMov(self, product, quantity=None, mode="buy", stop_limit=None):
-        '''Add movement function'''
-        self._css(path['add-mov'])[0].click()
-        self._css(path['search-box'])[0].fill(product)
-        if not self._elCss(path['first-res']):
-            self.logger.error("{product} not found".format(
-                product=underline(product)))
-            self._css('span.orderdialog-close')[0].click()
-            return 0
-        self._css(path['first-res'])[0].click()
-        self._css(path[mode + '-btn'])[0].click()
+    def addMov(self, product, quantity=None, mode="buy", stop_limit=None,
+               auto_margin=None, name_counter=None):
+        """main function for placing movements
+        stop_limit = {'gain': [mode, value], 'loss': [mode, value]}"""
+        # ~ ARGS ~
+        if (not isinstance(product, type('')) or
+                (not isinstance(name_counter, type('')) and
+                 name_counter is not None)):
+            raise ValueError('product and name_counter have to be a string')
+        if not isinstance(stop_limit, type({})) and stop_limit is not None:
+            raise ValueError('it has to be a dictionary')
+        # exclusive args
+        if quantity is not None and auto_margin is not None:
+            raise ValueError("quantity and auto_margin are exclusive")
+        elif quantity is None and auto_margin is None:
+            raise ValueError("need at least one quantity")
+        # ~ MAIN ~
+        # open new window
+        mov = self.new_mov(product)
+        mov.open()
+        mov.set_mode(mode)
+        # set quantity
         if quantity is not None:
-            self._css(path['quantity'])[0].fill(str(quantity))
+            mov.set_quantity(quantity)
+            # for best performance in long times
+            try:
+                margin = mov.get_unit_value() * quantity
+            except TimeoutError:
+                mov.close()
+                logger.warning("market closed for %s" % mov.product)
+                return False
+        # auto_margin calculate quantity (how simple!)
+        elif auto_margin is not None:
+            unit_value = mov.get_unit_value()
+            mov.set_quantity(auto_margin * unit_value)
+            margin = auto_margin
+        # stop limit (how can be so simple!)
         if stop_limit is not None:
-            self._css(path['limit-gain-' + stop_limit['gain'][0]]
-                      )[0].fill(str(stop_limit['gain'][1]))
-            self._css(path['limit-loss-' + stop_limit['loss'][0]]
-                      )[0].fill(str(stop_limit['loss'][1]))
-        self._css(path['confirm-btn'])[0].click()
-        self.logger.info("Added movement of {quant} {product} with limit \
-            {limit}".format(quant=bold(quantity), product=bold(product),
-                            limit=bold(stop_limit)))
-        sleep(1)
-        return 1
+            mov.set_limit('gain', stop_limit['gain'][0], stop_limit['gain'][1])
+            mov.set_limit('loss', stop_limit['loss'][0], stop_limit['loss'][1])
+        # confirm
+        try:
+            mov.confirm()
+        except (exceptions.MaxQuantLimit, exceptions.MinQuantLimit) as e:
+            logger.warning(e.err)
+            # resolve immediately
+            mov.set_quantity(e.quant)
+            mov.confirm()
+        except Exception:
+            logger.exception('undefined error in movement confirmation')
+        mov_logger.info(f"added {mov.product} movement of {mov.quantity} " +
+                        f"with margin of {margin}")
+        mov_logger.debug(f"stop_limit: {stop_limit}")
 
-    def closeMov(self, mov_id):
-        '''close a position'''
-        self._css("#" + mov_id + " div.close-icon")[0].click()
-        self.browser.find_by_text("OK")[0].click()
-        sleep(1.5)
-        if self._elCss("#" + mov_id + " div.close-icon"):
-            self.logger.error("failed to close mov {id}".format(id=mov_id))
-            return 0
-        else:
-            self.logger.info("closed mov {id}".format(id=bold(mov_id)))
-            return 1
+#         return {'margin': margin, 'name': name}
 
     def checkPos(self):
-        '''check all current positions'''
-        soup = BeautifulSoup(
-            self._css("tbody.dataTable-show-currentprice-arrows").html,
-            "html.parser")
-        movs = []
-        count = 0
-        for x in soup.find_all("tr"):
-            try:
-                prod_id = x['id']
-                product = x.select("td.name")[0].text
-                quant = x.select("td.quantity")[0].text
-                if "direction-label-buy" in soup.find_all("tr")[0] \
-                        .select("td.direction")[0].span['class']:
-                    mode = "long"
-                else:
-                    mode = "short"
-                price = self._num(x.select("td.averagePrice")[0].text)
-                earn = self._num(x.select("td.ppl")[0].text)
-                mov = Movement(prod_id, product, quant, mode, price, earn)
-                movs.append(mov)
-                count += 1
-            except Exception as e:
-                self.logger.error(e)
-        self.logger.debug(
-            "{count} positions updated".format(count=bold(count)))
-        self.movements = movs
-        return 1
+        """check all positions"""
+        soup = BeautifulSoup(self.css1(path['movs-table']).html, 'html.parser')
+        poss = []
+        for label in soup.find_all("tr"):
+            pos_id = label['id']
+            # init an empty list
+            # check if it already exist
+            pos_list = [x for x in self.positions if x.id == pos_id]
+            if pos_list:
+                # and update it
+                pos = pos_list[0]
+                pos.update(label)
+            else:
+                pos = self.new_pos(label)
+            pos.get_gain()
+            poss.append(pos)
+        # remove old positions
+        self.positions.clear()
+        self.positions.extend(poss)
+        logger.debug("%d positions update" % len(poss))
+        return self.positions
 
-    def checkStocks(self, stocks):
-        '''check specified stocks (list)'''
+    def checkStock(self):
+        """check stocks in preference"""
+        if not self.preferences:
+            logger.debug("no preferences")
+            return None
         soup = BeautifulSoup(
-            self._css("div.scrollable-area-content").html, "html.parser")
+            self.xpath(path['stock-table'])[0].html, "html.parser")
         count = 0
+        # iterate through product in left panel
         for product in soup.select("div.tradebox"):
-            name = product.select("span.instrument-name")[0].text.lower()
-            if [x for x in stocks if name.find(x) != -1]:  # to tidy up
-                if not [x for x in self.stocks if x.name == name]:
-                    self.stocks.append(Stock(name))
-                stock = [x for x in self.stocks if x.name == name][0]
-                mark_closed_list = [x for x in product.select(
-                    "div.quantity-list-input-wrapper") if x.select(
-                    "div.placeholder")[0].text != '']
-                if len(mark_closed_list) != 0:
-                    market = False
-                else:
-                    market = True
-                stock.market = market
-                if market is True:
-                    sell_price = product.select("div.tradebox-price-sell")[0]\
-                        .text
-                    raw_sent = product.select(
-                        "span.tradebox-buyers-container.number-box")[0].text
-                    try:
-                        sent = (int(raw_sent.strip('%')) / 100)
-                    except Exception as e:
-                        self.logger.warning(e)
-                        sent = None
-                    stock.addVar([sell_price, sent])
-                    count += 1
-        self.logger.debug("added {count} stocks".format(count=bold(count)))
-        return 1
+            prod_name = product.select("span.instrument-name")[0].text
+            stk_name = [x for x in self.preferences
+                        if x.lower() in prod_name.lower()]
+            if not stk_name:
+                continue
+            name = prod_name
+            if not [x for x in self.stocks if x.product == name]:
+                self.stocks.append(Stock(name))
+            stock = [x for x in self.stocks if x.product == name][0]
+            if 'tradebox-market-closed' in product['class']:
+                stock.market = False
+            if not stock.market:
+                logger.debug("market closed for %s" % stock.product)
+                continue
+            sell_price = product.select("div.tradebox-price-sell")[0].text
+            buy_price = product.select("div.tradebox-price-buy")[0].text
+            sent = int(product.select(path['sent'])[0].text.strip('%')) / 100
+            stock.new_rec([sell_price, buy_price, sent])
+            count += 1
+        logger.debug(f"added %d stocks" % count)
+        return self.stocks
 
-    def addPrefs(self, prefs):
-        '''add prefered stocks'''
-        try:
-            for pref in prefs:
-                self._css(path['search-btn'])[0].click()
-                self._css(path['all-tools'])[0].click()
-                self._css(path['search-pref'])[0].fill(pref)
-                if self._elCss(path['plus-icon']):
-                    self._css(path['add-btn'])[0].click()
-            self._css(path['close-prefs'])[0].click()
-            self._css("span.prefs-icon-node")[0].click()
-            self._css(
-                "div.item-tradebox-prefs-menu-list-sentiment_mode")[0].click()
-            self._css("span.prefs-icon-node")[0].click()
-            self.logger.debug("added {prefs} to preferencies".format(
-                prefs=', '.join([bold(x) for x in prefs])))
-            return 1
-        except Exception as e:
-            self.logger.error(e)
-            return 0
+    def addPrefs(self, prefs=[]):
+        self.preferences.extend(prefs)
 
     def clearPrefs(self):
-        '''clear all stock preferencies'''
-        try:
-            self._css(path['search-btn'])[0].click()
-            self._css(path['all-tools'])[0].click()
-            for res in self._css("div.search-results-list-item"):
-                if not res.find_by_css(path['plus-icon']):
-                    res.find_by_css(path['add-btn'])[0].click()
-            self._css('div.widget_message span.btn')[0].click()
-            # fix errors
-            self._css(path['close-prefs'])[0].click()
-            while not self._elCss(path['search-btn']):
-                time.sleep(0.5)
-            self.logger.debug("cleared preferencies")
-            return 1
-        except Exception as e:
-            self.logger.error(e)
-            return 0
+        """clear the left panel and preferences"""
+        self.preferences.clear()
+        tradebox_num = len(self.css('div.tradebox'))
+        for i in range(tradebox_num):
+            self.xpath(path['trade-box'])[0].right_click()
+            self.css1('div.item-trade-contextmenu-list-remove').click()
+        logger.info("cleared preferences")
 
-
-class Movement(object):
-    def __init__(self, prod_id, product, quantity, mode, price, earn):
-        self.id = prod_id
-        self.product = product
-        self.quantity = quantity
-        self.mode = mode
-        self.price = price
-        self.earn = earn
-
-
-class Stock(object):
-    def __init__(self, name):
-        self.name = name
-        self.market = False
-        self.vars = []
-
-    def addVar(self, var):
-        '''add a variation (list)'''
-        self.vars.append(var)
+    def addPrefs(self, prefs=[]):
+        """add preference in self.preferences"""
+        if len(prefs) == len(self.preferences) == 0:
+            logger.debug("no preferences")
+            return None
+        self.preferences.extend(prefs)
+        self.css1(path['search-btn']).click()
+        count = 0
+        for pref in self.preferences:
+            self.css1(path['search-pref']).fill(pref)
+            self.css1(path['pref-icon']).click()
+            btn = self.css1('div.add-to-watchlist-popup-item .icon-wrapper')
+            if not self.css1('svg', btn)['class'] is None:
+                btn.click()
+                count += 1
+            # remove window
+            self.css1(path['pref-icon']).click()
+        # close finally
+        self.css1(path['back-btn']).click()
+        self.css1(path['back-btn']).click()
+        logger.debug("updated %d preferences" % count)
+        return self.preferences
