@@ -59,4 +59,4 @@ logging.config.dictConfig({
     }
 })
 
-__VERSION__ = "v0.2rc1"
+__VERSION__ = "v0.2rc2"

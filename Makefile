@@ -1,4 +1,4 @@
-version = 'v0.2rc1'
+version = 'v0.2rc2'
 
 clean:
 	@find . -name "*.pyc" -delete
