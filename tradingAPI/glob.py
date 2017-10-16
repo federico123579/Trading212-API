@@ -23,7 +23,7 @@ class Glob(object, metaclass=Singleton):
         def conf_new(name):
             """configure new handler"""
             hand_name = (name + 'Handler')
-            logger.debug("initialized %s" % hand_name)
+            logger.debug("initiated %s" % hand_name)
             setattr(self, hand_name, Saver(file_path[name], name))
             configured = getattr(self, hand_name)
             configured.register_observer(self.theCollector)
@@ -31,8 +31,8 @@ class Glob(object, metaclass=Singleton):
 
         # init Observer
         self.theCollector = Collector()
-        logger.debug("initialized observer")
+        logger.debug("initiated observer")
         # init Observables
         conf_new('pip')
         conf_new('unit_value')
-        logger.debug("initialized observables")
+        logger.debug("initiated observables")

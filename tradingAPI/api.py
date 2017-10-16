@@ -96,7 +96,7 @@ class API(LowLevelAPI):
         logger.debug("%d positions update" % len(poss))
         return self.positions
 
-    def checkStock(self):
+    def checkStocks(self):
         """check stocks in preference"""
         if not self.preferences:
             logger.debug("no preferences")
@@ -120,8 +120,9 @@ class API(LowLevelAPI):
             if not stock.market:
                 logger.debug("market closed for %s" % stock.product)
                 continue
-            sell_price = product.select("div.tradebox-price-sell")[0].text
-            buy_price = product.select("div.tradebox-price-buy")[0].text
+            sell_price = float(
+                product.select("div.tradebox-price-sell")[0].text)
+            buy_price = float(product.select("div.tradebox-price-buy")[0].text)
             sent = int(product.select(path['sent'])[0].text.strip('%')) / 100
             stock.new_rec([sell_price, buy_price, sent])
             count += 1

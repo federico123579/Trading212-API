@@ -210,7 +210,7 @@ class LowLevelAPI(object):
         def __init__(self, api, product):
             self.api = api
             self.product = product
-            self.state = 'initialized'
+            self.state = 'initiated'
             self.insfu = False
 
         def open(self, name_counter=None):
@@ -319,7 +319,7 @@ class LowLevelAPI(object):
                 raise ValueError()
             if not hasattr(self, 'stop_limit'):
                 self.stop_limit = {'gain': {}, 'loss': {}}
-                logger.debug("initialized stop_limit")
+                logger.debug("initiated stop_limit")
             if category == 'gain':
                 self.api.xpath(
                     path['limit-gain-%s' % mode])[0].fill(str(value))
@@ -435,7 +435,7 @@ class LowLevelAPI(object):
     class Position(PurePosition):
         """position object"""
         def __init__(self, api, html_div):
-            """initialized from div"""
+            """initiated from div"""
             self.api = api
             if isinstance(html_div, type('')):
                 self.soup_data = BeautifulSoup(html_div, 'html.parser')
