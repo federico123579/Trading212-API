@@ -80,7 +80,7 @@ class StopLimit(BasicExc):
             self.cat = 'loss'
         elif 'take profit' in text:
             self.cat = 'gain'
-        elif 'higher', 'spread' in text:
+        elif all(x in text for x in ['higher', 'spread']):
             raise HigherSpread()
         else:
             raise ValueError("category not found in %s" % text)
