@@ -50,26 +50,42 @@ class API(LowLevelAPI):
                 return False
         # auto_margin calculate quantity (how simple!)
         elif auto_margin is not None:
-            unit_value = mov.get_unit_value()
-            mov.set_quantity(auto_margin * unit_value)
+            mov.set_quantity(int(auto_margin / mov.get_unit_value()))
             margin = auto_margin
         # stop limit (how can be so simple!)
         if stop_limit is not None:
             mov.set_limit('gain', stop_limit['gain'][0], stop_limit['gain'][1])
             mov.set_limit('loss', stop_limit['loss'][0], stop_limit['loss'][1])
+            # for bot
+            logger.debug(stop_limit)
+            logger.debug(all(stop_limit[x][0] == 'unit' for x in stop_limit.keys()))
+            if all(stop_limit[x][0] == 'unit' for x in stop_limit.keys()):
+                mov.bot_limit = [stop_limit['gain'][1], stop_limit['loss'][1]]
+                logger.debug("bot_limit set")
         # confirm
-        try:
-            mov.confirm()
-        except (exceptions.MaxQuantLimit, exceptions.MinQuantLimit) as e:
-            logger.warning(e.err)
-            # resolve immediately
-            mov.set_quantity(e.quant)
-            mov.confirm()
-        except Exception:
-            logger.exception('undefined error in movement confirmation')
+        while mov.state is not 'conclused':
+            try:
+                mov.confirm()
+            except (exceptions.MaxQuantLimit, exceptions.MinQuantLimit) as e:
+                logger.warning(e.err)
+                # resolve immediately
+                mov.set_quantity(e.quant)
+                continue
+            except exceptions.StopLimit as e:
+                logger.warning(e.err)
+                mov.set_limit(e.cat, 'unit', e.val)
+                continue
+            except (exceptions.MaxProduct, exceptions.HigherSpread)as e:
+                logger.warning(e.err)
+                mov.close()
+                return
+            except Exception:
+                logger.exception('undefined error in movement confirmation')
+                break
         mov_logger.info(f"added {mov.product} movement of {mov.quantity} " +
                         f"with margin of {margin}")
         mov_logger.debug(f"stop_limit: {stop_limit}")
+
 
 #         return {'margin': margin, 'name': name}
 
@@ -93,7 +109,7 @@ class API(LowLevelAPI):
         # remove old positions
         self.positions.clear()
         self.positions.extend(poss)
-        logger.debug("%d positions update" % len(poss))
+        logger.debug("updated %d positions" % len(poss))
         return self.positions
 
     def checkStocks(self):
@@ -123,8 +139,16 @@ class API(LowLevelAPI):
             sell_price = float(
                 product.select("div.tradebox-price-sell")[0].text)
             buy_price = float(product.select("div.tradebox-price-buy")[0].text)
-            sent = int(product.select(path['sent'])[0].text.strip('%')) / 100
-            stock.new_rec([sell_price, buy_price, sent])
+            # catch sentiment in not n/a
+            # try:
+            #     sent = int(product.select(
+            #         path['sent'])[0].text.strip('%')) / 100
+            # except ValueError:
+            #     logger.warning("sentiment hasn't been caught")
+            #     sent = None
+            # add value to records
+            # stock.new_rec([sell_price, buy_price, sent])
+            stock.new_rec([sell_price, buy_price])
             count += 1
         logger.debug(f"added %d stocks" % count)
         return self.stocks

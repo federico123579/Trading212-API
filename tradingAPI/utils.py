@@ -46,11 +46,12 @@ def num(string):
 
 
 def get_number_unit(number):
-    """get the unit of number"""
-    n = str(float(number))
+    """get the unit of number (remove micro pip)"""
+    n = str(number)
     mult, submult = n.split('.')
     if float(submult) != 0:
-        unit = '0.' + (len(submult)-1)*'0' + '1'
+        # remove the micro pip
+        unit = '0.' + (len(submult)-2)*'0' + '1'
         return float(unit)
     else:
         return float(1)
@@ -65,6 +66,13 @@ def get_pip(mov=None, api=None, name=None):
     elif mov is not None and api is not None:
         logger.error("mov and api are exclusive")
         raise ValueError()
+    # get pip
+    pip = Glob().theCollector.collection['pip']
+    if name in pip.keys():
+        logger.debug("pip found in the collection by name")
+        pip_res = pip[name]
+        return pip_res
+    # else check in mov.product
     if api is not None:
         if name is None:
             logger.error("need a name")
@@ -75,43 +83,16 @@ def get_pip(mov=None, api=None, name=None):
         mov._check_open()
     # find in the collection
     try:
-        logger.debug(len(Glob().theCollector.collection))
-        pip = Glob().theCollector.collection['pip']
-        if name is not None:
-            pip_res = pip[name]
-        elif mov is not None:
-            pip_res = pip[mov.product]
-        logger.debug("pip found in the collection")
+        pip_res = pip[mov.product]
+        logger.debug("pip found in the collection by mov")
+        if api is not None:
+            mov.close()
         return pip_res
     except KeyError:
         logger.debug("pip not found in the collection")
-    # ~ vars
-    records = []
-    intervals = [10, 20, 30]
-
-    def _check_price(interval=10):
-        timeout = time.time() + interval
-        while time.time() < timeout:
-            records.append(mov.get_price())
-            time.sleep(0.5)
-
-    # find variation
-    for interval in intervals:
-        _check_price(interval)
-        if min(records) == max(records):
-            logger.debug("no variation in %d seconds" % interval)
-            if interval == intervals[-1]:
-                raise TimeoutError("no variation")
-        else:
-            break
-    # find longer price
-    for price in records:
-        if 'best_price' not in locals():
-            best_price = price
-        if len(str(price)) > len(str(best_price)):
-            logger.debug("found new best_price %f" % price)
-            best_price = price
     # get pip
-    pip = get_number_unit(best_price)
-    Glob().pipHandler.add_val({mov.product: pip})
-    return pip
+    prod_pip = get_number_unit(mov.get_price())
+    Glob().pipHandler.add_val({mov.product: prod_pip})
+    if api is not None:
+        mov.close()
+    return prod_pip

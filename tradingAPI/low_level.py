@@ -40,11 +40,14 @@ class Stock(object):
 
 class Movement(object):
     """class-storing movement"""
-    def __init__(self, product, quantity, mode, price):
+    def __init__(self, product, quantity, mode, price, buy, sell, unit_limit):
         self.product = product
         self.quantity = quantity
         self.mode = mode
         self.price = price
+        self.buy_price = buy
+        self.sell_price = sell
+        self.unit_limit = unit_limit
 
 
 class PurePosition(object):
@@ -147,7 +150,7 @@ class LowLevelAPI(object):
             while not self.elCss(path['logo']):
                 if time.time() > timeout:
                     logger.critical("login failed")
-                    raise CredentialsException(username)
+                    raise exceptions.CredentialsException(username)
             time.sleep(1)
             logger.info(f"logged in as {username}")
             # check if it's a weekend
@@ -247,15 +250,18 @@ class LowLevelAPI(object):
         def confirm(self):
             """confirm the movement"""
             self._check_open()
+            # if mode not found
+            if not hasattr(self, 'mode'):
+                self.mode = 'buy'
             self.get_price()
             self.api.css1(path['confirm-btn']).click()
             widg = self.api.css("div.widget_message")
             if widg:
                 self.decode(widg[0])
-                raise exceptions.WidgetException(widg)
             if all(x for x in ['quantity', 'mode'] if hasattr(self, x)):
                 self.api.movements.append(Movement(
-                    self.product, self.quantity, self.mode, self.price))
+                    self.product, self.quantity, self.mode, self.price,
+                    self.buy_price, self.sell_price, self.bot_limit))
                 logger.debug("%s movement appended to the list" % self.product)
             self.state = 'conclused'
             logger.debug("confirmed movement")
@@ -314,6 +320,7 @@ class LowLevelAPI(object):
         def set_limit(self, category, mode, value):
             """set limit in movement window"""
             self._check_open()
+            value = round(value, 8)
             if (mode not in ["unit", "value"] or category
                     not in ["gain", "loss", "both"]):
                 raise ValueError()
@@ -322,18 +329,18 @@ class LowLevelAPI(object):
                 logger.debug("initiated stop_limit")
             if category == 'gain':
                 self.api.xpath(
-                    path['limit-gain-%s' % mode])[0].fill(str(value))
+                    path['limit-gain-%s' % mode])[0].fill("%f" % value)
             elif category == 'loss':
                 self.api.xpath(
-                    path['limit-loss-%s' % mode])[0].fill(str(value))
+                    path['limit-loss-%s' % mode])[0].fill("%f" % value)
             if category != 'both':
                 self.stop_limit[category]['mode'] = mode
                 self.stop_limit[category]['value'] = value
             elif category == 'both':
                 self.api.xpath(
-                    path['limit-gain-%s' % mode])[0].fill(str(value))
+                    path['limit-gain-%s' % mode])[0].fill("%f" % value)
                 self.api.xpath(
-                    path['limit-loss-%s' % mode])[0].fill(str(value))
+                    path['limit-loss-%s' % mode])[0].fill("%f" % value)
                 for cat in ['gain', 'loss']:
                     self.stop_limit[cat]['mode'] = mode
                     self.stop_limit[cat]['value'] = value
@@ -349,6 +356,12 @@ class LowLevelAPI(object):
                 raise exceptions.MaxQuantLimit(num(text))
             elif title == "Minimum Quantity Limit":
                 raise exceptions.MinQuantLimit(num(text))
+            elif 'distance value' in text.lower():
+                raise exceptions.StopLimit(text, num(text))
+            else:
+                logger.warning("widget title: %s" % title)
+                logger.warning("widget text: %s" % text)
+                raise exceptions.WidgetException(message)
             logger.debug("decoded message")
 
         def decode_update(self, message, value, mult=0.1):
@@ -399,6 +412,10 @@ class LowLevelAPI(object):
             self._check_open()
             price = num(self.api.css1(
                 "div.orderdialog div.tradebox-price-%s" % mode).text)
+            self.buy_price = num(self.api.css1(
+                "div.orderdialog div.tradebox-price-buy").text)
+            self.sell_price = num(self.api.css1(
+                "div.orderdialog div.tradebox-price-sell").text)
             self.price = price
             return price
 
@@ -487,7 +504,8 @@ class LowLevelAPI(object):
                 time.sleep(0.1)
                 if time.time() > timeout:
                     raise TimeoutError("failed to close pos %s" % self.id)
-            logger.debug("closed pos %s" % self.id)
+            logger.debug("closed pos %s with gain of %f" %
+                         (self.id, self.get_gain()))
 
         def get_gain(self):
             """get current profit"""
