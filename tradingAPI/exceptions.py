@@ -96,6 +96,13 @@ class HigherSpread(BasicExc):
         super().__init__(self.err)
 
 
+class PriceChange(BasicExc):
+    """in case of price change"""
+    def __init__(self, price):
+        self.err = "price changed to %f" % price
+        super().__init__(self.err)
+
+
 class MarketClosed(Exception):
     """base exception for closed market"""
     def __init__(self):

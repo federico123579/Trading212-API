@@ -75,6 +75,10 @@ class API(LowLevelAPI):
                 logger.warning(e.err)
                 mov.set_limit(e.cat, 'unit', e.val)
                 continue
+            except exceptions.PriceChange as e:
+                logger.warning(e.err)
+                self.api.xpath(path['ok_but'])[0].click()
+                continue
             except (exceptions.MaxProduct, exceptions.HigherSpread)as e:
                 logger.warning(e.err)
                 mov.close()

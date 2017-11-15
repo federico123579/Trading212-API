@@ -358,6 +358,8 @@ class LowLevelAPI(object):
                 raise exceptions.MinQuantLimit(num(text))
             elif 'distance value' in text.lower():
                 raise exceptions.StopLimit(text, num(text))
+            elif title == "Price Changed":
+                raise exceptions.PriceChange(num(text))
             else:
                 logger.warning("widget title: %s" % title)
                 logger.warning("widget text: %s" % text)
