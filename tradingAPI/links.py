@@ -11,7 +11,7 @@ import os.path
 
 path = {
     'login-btn': "#login-button",
-    'log': "input.btn-head",
+    'log': "input.button-login",
     'logo': "div.nav_logo",
     'alert-box': "span.weekend-trading-close",
     'add-mov': "span.open-dialog-icon.svg-icon-holder",
