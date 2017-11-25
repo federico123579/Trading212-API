@@ -77,7 +77,7 @@ class API(LowLevelAPI):
                 continue
             except exceptions.PriceChange as e:
                 logger.warning(e.err)
-                self.api.xpath(path['ok_but'])[0].click()
+                self.xpath(path['ok_but'])[0].click()
                 continue
             except (exceptions.MaxProduct, exceptions.HigherSpread)as e:
                 logger.warning(e.err)

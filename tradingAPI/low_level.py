@@ -131,6 +131,15 @@ class LowLevelAPI(object):
             dom = self.browser
         return expect(dom.is_element_present_by_xpath, args=[xpath])
 
+    def _wait_login(self, time_left):
+        """define a timeout for logging in"""
+        timeout = time.time() + time_left
+        while not self.elCss(path['logo']):
+            if time.time() > timeout:
+                logger.critical("login failed")
+                raise exceptions.CredentialsException(username)
+        time.sleep(1)
+
     def login(self, username, password, mode="demo"):
         """login function"""
         url = "https://trading212.com/it/login"
@@ -145,14 +154,14 @@ class LowLevelAPI(object):
             self.search_name("login[username]").fill(username)
             self.search_name("login[password]").fill(password)
             self.css1(path['log']).click()
-            # define a timeout for logging in
-            timeout = time.time() + 30
-            while not self.elCss(path['logo']):
-                if time.time() > timeout:
-                    logger.critical("login failed")
-                    raise exceptions.CredentialsException(username)
-            time.sleep(1)
+            self._wait_login(30)
             logger.info(f"logged in as {username}")
+            # if there is a real account
+            if (mode == "demo" and self.css1("div.nav-button.real_item")
+                    .text.lower() == "deposit funds"):
+                self.css1("div.user").click()
+                self.css1("div.item-account-menu-openDemoAccount").click()
+                self._wait_login(30)
             # check if it's a weekend
             if mode == "demo" and datetime.now().isoweekday() in range(5, 8):
                 timeout = time.time() + 10
