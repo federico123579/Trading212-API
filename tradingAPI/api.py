@@ -41,17 +41,9 @@ class API(LowLevelAPI):
         # set quantity
         if quantity is not None:
             mov.set_quantity(quantity)
-            # for best performance in long times
-            try:
-                margin = mov.get_unit_value() * quantity
-            except TimeoutError:
-                mov.close()
-                logger.warning("market closed for %s" % mov.product)
-                return False
         # auto_margin calculate quantity (how simple!)
         elif auto_margin is not None:
             mov.set_quantity(int(auto_margin / mov.get_unit_value()))
-            margin = auto_margin
         # stop limit (how can be so simple!)
         if stop_limit is not None:
             mov.set_limit('gain', stop_limit['gain'][0], stop_limit['gain'][1])
@@ -66,6 +58,7 @@ class API(LowLevelAPI):
         while mov.state is not 'conclused':
             try:
                 mov.confirm()
+                margin = mov.margin
             except (exceptions.MaxQuantLimit, exceptions.MinQuantLimit) as e:
                 logger.warning(e.err)
                 # resolve immediately
@@ -89,9 +82,7 @@ class API(LowLevelAPI):
         mov_logger.info(f"added {mov.product} movement of {mov.quantity} " +
                         f"with margin of {margin}")
         mov_logger.debug(f"stop_limit: {stop_limit}")
-
-
-#         return {'margin': margin, 'name': name}
+        return margin  # if margin left
 
     def checkPos(self):
         """check all positions"""

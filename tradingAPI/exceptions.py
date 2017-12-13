@@ -119,3 +119,9 @@ class MaxProduct(BasicExc):
     def __init__(self):
         self.err = "can't buy more of this product"
         super().__init__(self.err)
+
+
+class PositionNotClosed(BasicExc):
+    def __init__(self):
+        self.err = "positon not closed"
+        super().__init__(self.err)

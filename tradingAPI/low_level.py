@@ -19,6 +19,7 @@ from .utils import num, expect, get_pip
 # exceptions
 from tradingAPI import exceptions
 import selenium.common.exceptions
+import splinter.exceptions
 
 # logging
 import logging
@@ -131,7 +132,7 @@ class LowLevelAPI(object):
             dom = self.browser
         return expect(dom.is_element_present_by_xpath, args=[xpath])
 
-    def _wait_login(self, time_left):
+    def _wait_login(self, time_left, username):
         """define a timeout for logging in"""
         timeout = time.time() + time_left
         while not self.elCss(path['logo']):
@@ -154,14 +155,14 @@ class LowLevelAPI(object):
             self.search_name("login[username]").fill(username)
             self.search_name("login[password]").fill(password)
             self.css1(path['log']).click()
-            self._wait_login(30)
+            self._wait_login(30, username)
             logger.info(f"logged in as {username}")
             # if there is a real account
             if (mode == "demo" and self.css1("div.nav-button.real_item")
                     .text.lower() == "deposit funds"):
                 self.css1("div.user").click()
                 self.css1("div.item-account-menu-openDemoAccount").click()
-                self._wait_login(30)
+                self._wait_login(30, username)
             # check if it's a weekend
             if mode == "demo" and datetime.now().isoweekday() in range(5, 8):
                 timeout = time.time() + 10
@@ -176,6 +177,16 @@ class LowLevelAPI(object):
             logger.critical("login failed")
             raise exceptions.BaseExc(e)
         return True
+
+    def sess_expired(self):
+        """acquire session expired"""
+        logbtn = '//*[@class="widget_message"]/div[2]/span[1]'
+        if self.elXpath(logbtn):
+            if self.xpath(logbtn)[0].text.lower() == "login":
+                self.xpath(logbtn)[0].click()
+                time.sleep(2)
+                self._wait_login(30)
+                logger.debug("session reaquired")
 
     def logout(self):
         """logout func (quit browser)"""
@@ -227,6 +238,7 @@ class LowLevelAPI(object):
 
         def open(self, name_counter=None):
             """open the window"""
+            self.api.sess_expired()
             if self.api.css1(path['add-mov']).visible:
                 self.api.css1(path['add-mov']).click()
             else:
@@ -263,6 +275,7 @@ class LowLevelAPI(object):
             if not hasattr(self, 'mode'):
                 self.mode = 'buy'
             self.get_price()
+            self.margin = self.get_mov_margin()
             self.api.css1(path['confirm-btn']).click()
             widg = self.api.css("div.widget_message")
             if widg:
@@ -498,7 +511,10 @@ class LowLevelAPI(object):
 
         def close(self):
             """close position via tag"""
-            self.api.css1(self.close_tag).click()
+            try:
+                self.api.css1(self.close_tag).click()
+            except splinter.exceptions.ElementDoesNotExist:
+                raise exceptions.PositionNotClosed()
             try:
                 self.api.xpath(path['ok_but'])[0].click()
             except selenium.common.exceptions.ElementNotInteractableException:
@@ -515,8 +531,8 @@ class LowLevelAPI(object):
                 time.sleep(0.1)
                 if time.time() > timeout:
                     raise TimeoutError("failed to close pos %s" % self.id)
-            logger.debug("closed pos %s with gain of %f" %
-                         (self.id, self.get_gain()))
+            logger.info("closed pos %s with gain of %f" %
+                        (self.id, self.get_gain()))
 
         def get_gain(self):
             """get current profit"""
