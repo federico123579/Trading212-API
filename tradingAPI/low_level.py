@@ -233,6 +233,7 @@ class LowLevelAPI(object):
         def __init__(self, api, product):
             self.api = api
             self.product = product
+            self.margin = None
             self.state = 'initiated'
             self.insfu = False
 
@@ -275,11 +276,14 @@ class LowLevelAPI(object):
             if not hasattr(self, 'mode'):
                 self.mode = 'buy'
             self.get_price()
-            self.margin = self.get_mov_margin()
             self.api.css1(path['confirm-btn']).click()
             widg = self.api.css("div.widget_message")
             if widg:
-                self.decode(widg[0])
+                try:
+                    self.decode(widg[0])
+                except exceptions.PriceChange as e:
+                    logger.warning(e.err)
+                    self.xpath(path['confirm_but'])[0].click()
             if all(x for x in ['quantity', 'mode'] if hasattr(self, x)):
                 self.api.movements.append(Movement(
                     self.product, self.quantity, self.mode, self.price,
@@ -428,6 +432,10 @@ class LowLevelAPI(object):
             self.api.css1(path['quantity']).fill(str(int(quant)))
             self.quantity = quant
             logger.debug("quantity set")
+            if self.margin == self.get_mov_margin():
+                time.sleep(1.5)  # wait the update
+            self.margin = self.get_mov_margin()
+            logger.debug("margin retrieved")
 
         def get_price(self, mode='buy'):
             """get current price"""

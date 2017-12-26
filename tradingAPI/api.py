@@ -1,3 +1,4 @@
+import math
 from bs4 import BeautifulSoup
 from .links import path
 # exceptions
@@ -43,7 +44,7 @@ class API(LowLevelAPI):
             mov.set_quantity(quantity)
         # auto_margin calculate quantity (how simple!)
         elif auto_margin is not None:
-            mov.set_quantity(int(auto_margin / mov.get_unit_value()))
+            mov.set_quantity(math.ceil(auto_margin / mov.get_unit_value()))
         # stop limit (how can be so simple!)
         if stop_limit is not None:
             mov.set_limit('gain', stop_limit['gain'][0], stop_limit['gain'][1])
@@ -68,21 +69,17 @@ class API(LowLevelAPI):
                 logger.warning(e.err)
                 mov.set_limit(e.cat, 'unit', e.val)
                 continue
-            except exceptions.PriceChange as e:
-                logger.warning(e.err)
-                self.xpath(path['ok_but'])[0].click()
-                continue
             except (exceptions.MaxProduct, exceptions.HigherSpread)as e:
                 logger.warning(e.err)
                 mov.close()
-                return
+                return {'margin': 0, 'quantity': 0}
             except Exception:
                 logger.exception('undefined error in movement confirmation')
-                break
+                raise
         mov_logger.info(f"added {mov.product} movement of {mov.quantity} " +
                         f"with margin of {margin}")
         mov_logger.debug(f"stop_limit: {stop_limit}")
-        return margin  # if margin left
+        return {'margin': margin, 'quantity': mov.quantity}  # if margin left
 
     def checkPos(self):
         """check all positions"""

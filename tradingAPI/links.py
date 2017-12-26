@@ -40,6 +40,7 @@ path = {
     'close': "span.orderdialog-close",
     'movs-table': "div#accountPanel .table-body",
     'ok_but': '//*[contains(@class, "widget_message")]/div[2]/span[1]',
+    'confirm_but': '//*[contains(@class, "widget_message")]/div[3]/span[1]',
     'stock-table': '//*[@id="tradePanel"]/div[5]/div[3]/div',
     # 'sent': "span.tradebox-buyers-container.number-box",
     'trade-box': '//div[@id="tradePanel"]/div[5]/div[3]/div[1]' +
